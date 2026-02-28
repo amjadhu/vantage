@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #0a0a0f;
+  --color-surface: #12121a;
+  --color-surface-hover: #1a1a25;
+  --color-border: #1e1e2e;
+  --color-border-bright: #2a2a3e;
+  --color-text-primary: #e2e2ea;
+  --color-text-secondary: #8888a0;
+  --color-text-muted: #555570;
+  --color-accent: #6366f1;
+  --color-accent-hover: #818cf8;
+  --color-critical: #ef4444;
+  --color-high: #f97316;
+  --color-medium: #eab308;
+  --color-low: #22c55e;
+  --color-info: #3b82f6;
+  --color-positive: #22c55e;
+  --color-negative: #ef4444;
+  --color-neutral: #8888a0;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-bright);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Markdown content styling */
+.prose-dark h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--color-text-primary); }
+.prose-dark h2 { font-size: 1.25rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; color: var(--color-text-primary); }
+.prose-dark h3 { font-size: 1.1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; color: var(--color-text-primary); }
+.prose-dark p { margin-bottom: 0.75rem; color: var(--color-text-secondary); line-height: 1.7; }
+.prose-dark ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+.prose-dark ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+.prose-dark li { margin-bottom: 0.25rem; color: var(--color-text-secondary); }
+.prose-dark strong { color: var(--color-text-primary); font-weight: 600; }
+.prose-dark a { color: var(--color-accent); text-decoration: underline; }
+.prose-dark a:hover { color: var(--color-accent-hover); }
+.prose-dark blockquote { border-left: 3px solid var(--color-accent); padding-left: 1rem; margin: 1rem 0; color: var(--color-text-muted); }
+.prose-dark code { background: var(--color-surface); padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.875rem; }
+.prose-dark hr { border-color: var(--color-border); margin: 1.5rem 0; }

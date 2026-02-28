@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/fetch",
+      "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/cron/enrich",
+      "schedule": "15 */2 * * *"
+    },
+    {
+      "path": "/api/cron/connect",
+      "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/cron/briefing",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}
