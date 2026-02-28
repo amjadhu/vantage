@@ -18,7 +18,7 @@ export default async function BriefingPage() {
     <div>
       <PageHeader
         title="Daily Briefing"
-        description="AI-generated executive intelligence summary"
+        description="AI-generated daily tech intelligence summary"
       />
 
       {briefing ? (

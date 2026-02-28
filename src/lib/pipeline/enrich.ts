@@ -5,7 +5,6 @@ import { parseEnrichmentResponse } from "@/lib/ai/parse";
 import { getUnenrichedArticles, getDefaultPersona, insertEnrichment } from "@/lib/db/queries";
 import { db, schema } from "@/lib/db/client";
 import { eq } from "drizzle-orm";
-import type { PersonaConfig } from "@/types";
 
 export async function runEnrichmentPipeline(opts: {
   limit?: number;
@@ -22,7 +21,6 @@ export async function runEnrichmentPipeline(opts: {
     throw new Error("No default persona found");
   }
 
-  const personaConfig = persona.config as PersonaConfig;
   const articles = await getUnenrichedArticles(limit);
 
   let enriched = 0;
@@ -32,7 +30,6 @@ export async function runEnrichmentPipeline(opts: {
 
   for (const article of articles) {
     try {
-      // Fetch source name
       const sourceResult = await db
         .select({ name: schema.sources.name })
         .from(schema.sources)
@@ -41,20 +38,17 @@ export async function runEnrichmentPipeline(opts: {
 
       const sourceName = sourceResult[0]?.name || "Unknown";
 
-      const prompt = buildEnrichmentPrompt(
-        {
-          title: article.title,
-          content: article.content,
-          source: sourceName,
-          publishedAt: article.publishedAt,
-        },
-        personaConfig
-      );
+      const prompt = buildEnrichmentPrompt({
+        title: article.title,
+        content: article.content,
+        source: sourceName,
+        publishedAt: article.publishedAt,
+      });
 
       const response = await callClaude({
         model: "claude-sonnet-4-5-20250929",
         prompt,
-        maxTokens: 2048,
+        maxTokens: 1024,
         temperature: 0.2,
       });
 
@@ -71,7 +65,7 @@ export async function runEnrichmentPipeline(opts: {
         entities: enrichment.entities,
         categoryTags: enrichment.categoryTags,
         keyFacts: enrichment.keyFacts,
-        connectionHints: enrichment.connectionHints,
+        connectionHints: [],
         modelUsed: "claude-sonnet-4-5-20250929",
         tokenCount: response.inputTokens + response.outputTokens,
         enrichedAt: new Date().toISOString(),

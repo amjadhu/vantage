@@ -4,7 +4,6 @@ import { buildBriefingPrompt } from "@/lib/ai/prompts";
 import { db, schema } from "@/lib/db/client";
 import { getDefaultPersona } from "@/lib/db/queries";
 import { eq, desc, gte } from "drizzle-orm";
-import type { PersonaConfig } from "@/types";
 
 export async function runBriefingPipeline(): Promise<{
   briefingId: string;
@@ -15,8 +14,6 @@ export async function runBriefingPipeline(): Promise<{
   if (!persona) {
     throw new Error("No default persona found");
   }
-
-  const personaConfig = persona.config as PersonaConfig;
 
   // Get enriched articles from the last 24 hours
   const yesterday = new Date();
@@ -49,7 +46,7 @@ export async function runBriefingPipeline(): Promise<{
     categoryTags: (enrichment.categoryTags as string[]) || [],
   }));
 
-  const prompt = buildBriefingPrompt(articleData, personaConfig);
+  const prompt = buildBriefingPrompt(articleData);
 
   const response = await callClaude({
     model: "claude-opus-4-6",

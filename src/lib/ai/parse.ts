@@ -14,7 +14,7 @@ const enrichmentSchema = z.object({
   ),
   categoryTags: z.array(z.string()),
   keyFacts: z.array(z.string()),
-  connectionHints: z.array(z.string()),
+  connectionHints: z.array(z.string()).optional().default([]),
 });
 
 const connectionSchema = z.array(

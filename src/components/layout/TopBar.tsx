@@ -14,7 +14,7 @@ export function TopBar() {
           {format(new Date(), "MMM d")}
         </span>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-accent/10 text-accent text-xs font-medium">
-          Executive
+          Tech Intel
         </span>
       </div>
 

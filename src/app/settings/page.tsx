@@ -1,79 +1,27 @@
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { getAllSources, getDefaultPersona, getArticleCount, getSourceStats } from "@/lib/db/queries";
+import { getAllSources, getArticleCount, getSourceStats } from "@/lib/db/queries";
 import { getDailyUsageSummary } from "@/lib/pipeline/usage";
-import type { PersonaConfig } from "@/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const [sources, persona, articleCount, sourceStats, usage] = await Promise.all([
+  const [sources, articleCount, sourceStats, usage] = await Promise.all([
     getAllSources(),
-    getDefaultPersona(),
     getArticleCount(),
     getSourceStats(),
     getDailyUsageSummary(),
   ]);
 
-  const config = persona?.config as PersonaConfig | null;
-
   return (
     <div>
       <PageHeader
         title="Settings"
-        description="Persona configuration, source management, and system monitoring"
+        description="Source management, cost monitoring, and system configuration"
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Active Persona */}
-        <Card>
-          <h3 className="text-sm font-semibold text-text-primary mb-3">Active Persona</h3>
-          {persona && config ? (
-            <div className="space-y-3">
-              <p className="text-sm text-text-primary font-medium">{persona.name}</p>
-              <p className="text-xs text-text-secondary">{persona.description}</p>
-              <div className="space-y-2 pt-2 border-t border-border">
-                <p className="text-xs text-text-muted font-medium">Interest Areas</p>
-                <div className="space-y-1">
-                  {config.interestAreas.map((ia) => (
-                    <div key={ia.topic} className="flex items-center justify-between">
-                      <span className="text-xs text-text-secondary">{ia.topic}</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 h-1.5 bg-border rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-accent rounded-full"
-                            style={{ width: `${ia.weight * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-text-muted w-6">{ia.weight}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-1 pt-2 border-t border-border">
-                <p className="text-xs text-text-muted font-medium">Company Watchlist</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {config.companyWatchlist.map((ticker) => (
-                    <Badge key={ticker}>{ticker}</Badge>
-                  ))}
-                </div>
-              </div>
-              <div className="flex justify-between text-xs pt-2 border-t border-border">
-                <span className="text-text-muted">Depth</span>
-                <span className="text-text-primary">{config.depthLevel}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-text-muted">Relevance Threshold</span>
-                <span className="text-text-primary">{config.relevanceThreshold}</span>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-text-muted">No persona configured</p>
-          )}
-        </Card>
-
         {/* System Stats */}
         <Card>
           <h3 className="text-sm font-semibold text-text-primary mb-3">System Stats</h3>
@@ -111,6 +59,29 @@ export default async function SettingsPage() {
               </div>
             </div>
           )}
+        </Card>
+
+        {/* Pipeline Endpoints */}
+        <Card>
+          <h3 className="text-sm font-semibold text-text-primary mb-3">Pipeline Endpoints</h3>
+          <div className="space-y-2">
+            {[
+              { name: "Fetch Articles", path: "/api/cron/fetch", desc: "Fetch from all sources" },
+              { name: "Enrich Articles", path: "/api/cron/enrich", desc: "AI enrichment pipeline" },
+              { name: "Find Connections", path: "/api/cron/connect", desc: "Cross-article connections" },
+              { name: "Generate Briefing", path: "/api/cron/briefing", desc: "Daily tech briefing" },
+            ].map((ep) => (
+              <div key={ep.path} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
+                <div>
+                  <p className="text-xs text-text-primary font-medium">{ep.name}</p>
+                  <p className="text-xs text-text-muted">{ep.desc}</p>
+                </div>
+                <code className="text-xs text-accent bg-accent/10 px-2 py-0.5 rounded">
+                  {ep.path}
+                </code>
+              </div>
+            ))}
+          </div>
         </Card>
 
         {/* Daily Usage / Cost Control */}
@@ -155,31 +126,8 @@ export default async function SettingsPage() {
           </div>
         </Card>
 
-        {/* Pipeline Endpoints */}
-        <Card>
-          <h3 className="text-sm font-semibold text-text-primary mb-3">Pipeline Endpoints</h3>
-          <div className="space-y-2">
-            {[
-              { name: "Fetch Articles", path: "/api/cron/fetch", desc: "Fetch from all sources" },
-              { name: "Enrich Articles", path: "/api/cron/enrich", desc: "AI enrichment pipeline" },
-              { name: "Find Connections", path: "/api/cron/connect", desc: "Cross-article connections" },
-              { name: "Generate Briefing", path: "/api/cron/briefing", desc: "Daily executive briefing" },
-            ].map((ep) => (
-              <div key={ep.path} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
-                <div>
-                  <p className="text-xs text-text-primary font-medium">{ep.name}</p>
-                  <p className="text-xs text-text-muted">{ep.desc}</p>
-                </div>
-                <code className="text-xs text-accent bg-accent/10 px-2 py-0.5 rounded">
-                  {ep.path}
-                </code>
-              </div>
-            ))}
-          </div>
-        </Card>
-
         {/* Sources */}
-        <Card>
+        <Card className="lg:col-span-2">
           <h3 className="text-sm font-semibold text-text-primary mb-3">
             Configured Sources ({sources.length})
           </h3>

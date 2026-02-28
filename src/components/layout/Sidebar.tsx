@@ -75,7 +75,7 @@ export function Sidebar() {
       <div className="px-4 py-3 border-t border-border">
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-positive" />
-          <span className="text-xs text-text-muted">Executive Persona</span>
+          <span className="text-xs text-text-muted">Active</span>
         </div>
       </div>
     </>

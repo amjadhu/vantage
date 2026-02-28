@@ -5,38 +5,24 @@ export function buildEnrichmentPrompt(article: {
   content: string;
   source: string;
   publishedAt: string;
-}, persona: PersonaConfig): string {
-  const interestContext = persona.interestAreas
-    .map((ia) => `${ia.topic} (weight: ${ia.weight})`)
-    .join(", ");
+}): string {
+  return `Analyze this article and return a JSON enrichment.
 
-  return `You are an intelligence analyst preparing a briefing for a technology executive.
+Title: ${article.title}
+Source: ${article.source}
+Published: ${article.publishedAt}
+Content: ${article.content.substring(0, 3000)}
 
-Analyze the following article and produce a structured enrichment.
+Return JSON with these fields:
+- "executiveSummary": 1-2 sentence summary of what matters
+- "relevanceScore": 0-1 relevance to tech/cybersecurity/AI/cloud
+- "impactLevel": "critical"|"high"|"medium"|"low"|"informational"
+- "sentiment": "positive"|"negative"|"neutral"|"mixed"
+- "entities": [{"name":"...","type":"company"|"person"|"technology"|"vulnerability"|"regulation"|"product"}] (max 5)
+- "categoryTags": short tags, max 4 (e.g. "ransomware","AI","cloud")
+- "keyFacts": 2-3 key facts
 
-**Persona context:**
-- Depth level: ${persona.depthLevel}
-- Interest areas: ${interestContext}
-- Company watchlist: ${persona.companyWatchlist.join(", ")}
-
-**Article:**
-- Title: ${article.title}
-- Source: ${article.source}
-- Published: ${article.publishedAt}
-- Content: ${article.content.substring(0, 6000)}
-
-**Instructions:**
-Produce a JSON object with exactly these fields:
-- "executiveSummary": A 2-3 sentence executive-level summary. Be concise and highlight what matters.
-- "relevanceScore": A number 0-1 indicating relevance to this persona's interests. 1.0 = directly about their top interest area, 0 = completely irrelevant.
-- "impactLevel": One of "critical", "high", "medium", "low", "informational"
-- "sentiment": One of "positive", "negative", "neutral", "mixed"
-- "entities": Array of { "name": string, "type": "company"|"person"|"technology"|"vulnerability"|"regulation"|"product" }
-- "categoryTags": Array of short category tags (e.g. "ransomware", "AI", "cloud-security")
-- "keyFacts": Array of 2-4 key facts or data points from the article
-- "connectionHints": Array of 1-2 hints about what other topics/events this might connect to
-
-Return ONLY valid JSON. No markdown, no explanation, no code fences.`;
+Return ONLY valid JSON. No markdown, no explanation.`;
 }
 
 export function buildBriefingPrompt(articles: Array<{
@@ -47,14 +33,13 @@ export function buildBriefingPrompt(articles: Array<{
   source: string;
   url: string;
   categoryTags: string[];
-}>, persona: PersonaConfig): string {
+}>): string {
   const articleList = articles
-    .map((a, i) => `${i + 1}. [${a.impactLevel.toUpperCase()}] ${a.title} (${a.source})\n   Summary: ${a.summary}\n   Tags: ${a.categoryTags.join(", ")}\n   Relevance: ${a.relevanceScore}\n   URL: ${a.url}`)
+    .map((a, i) => `${i + 1}. [${a.impactLevel.toUpperCase()}] ${a.title} (${a.source})\n   ${a.summary}\n   Tags: ${a.categoryTags.join(", ")}\n   ${a.url}`)
     .join("\n\n");
 
-  return `You are a senior intelligence analyst preparing a daily executive briefing.
+  return `You are a senior technology analyst writing a daily intelligence briefing for engineers and tech leaders.
 
-**Persona:** Technology Executive — Cybersecurity Focus
 **Date:** ${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
 
 **Today's Intelligence (${articles.length} articles):**
@@ -62,30 +47,33 @@ export function buildBriefingPrompt(articles: Array<{
 ${articleList}
 
 **Instructions:**
-Generate a structured daily briefing in markdown format. Use these sections:
+Generate a daily tech intelligence briefing in markdown. Use these exact sections:
 
 ## Key Takeaways
-3-5 bullet points summarizing the most important developments.
+- 3-5 bullet points on the most important tech developments today. Each on its own line starting with "- ".
 
 ## Critical Alerts
-Any critical/high impact items requiring immediate attention. If none, say so.
+- Any critical/high impact security or infrastructure items. Each on its own line starting with "- ". If none, write "No critical alerts today."
 
 ## Top Stories
-The 5-8 most significant stories with brief analysis of why they matter.
+For each of the 5-8 most significant stories, write a **bold title** followed by 1-2 sentences of analysis on a new line. Separate stories with a blank line.
 
-## Cyber Landscape
-Overview of cybersecurity developments, threats, and trends.
+## Tech & Engineering Landscape
+Key developments across software engineering, infrastructure, AI/ML, cloud, open source, and developer tools. What should builders and technical leaders pay attention to?
 
-## Company Watchlist
-Updates relevant to: ${persona.companyWatchlist.join(", ")}. Note any competitive developments.
+## Cybersecurity Update
+Threat landscape, vulnerabilities, breaches, and security tooling updates.
 
 ## Emerging Trends
-Patterns or trends emerging from today's intelligence.
+Patterns emerging across today's intelligence. What's gaining momentum?
 
 ## Action Items
-Specific recommendations or items requiring follow-up.
+A numbered list of specific, actionable items. Each on its own line:
+1. First action item
+2. Second action item
+3. Third action item
 
-Write in a crisp, executive style. Be analytical, not just summarizing. Connect dots between stories where relevant. Include relevant URLs as markdown links.`;
+Write in a crisp, analytical style. Connect dots between stories. Include URLs as markdown links where relevant. Focus on technical depth and engineering implications, not just business summaries.`;
 }
 
 export function buildConnectionPrompt(articles: Array<{
@@ -98,21 +86,18 @@ export function buildConnectionPrompt(articles: Array<{
     .map((a) => `- ID: ${a.id}\n  Title: ${a.title}\n  Summary: ${a.summary}\n  Tags: ${a.categoryTags.join(", ")}`)
     .join("\n\n");
 
-  return `You are an intelligence analyst identifying connections between articles.
+  return `Identify connections between these articles.
 
-**Articles:**
 ${articleList}
 
-**Instructions:**
-Identify meaningful connections between these articles. For each connection, provide:
-- "sourceArticleId": ID of the first article
-- "targetArticleId": ID of the second article
-- "relationshipType": One of "related", "follow-up", "contradicts", "caused-by"
-- "reasoning": Brief explanation of the connection
-- "confidence": Number 0-1
+For each connection return:
+- "sourceArticleId": ID of first article
+- "targetArticleId": ID of second article
+- "relationshipType": "related"|"follow-up"|"contradicts"|"caused-by"
+- "reasoning": Brief explanation
+- "confidence": 0-1
 
-Return a JSON array of connections. Only include connections with confidence >= 0.5.
-Return ONLY valid JSON. No markdown, no explanation.`;
+Return a JSON array. Only confidence >= 0.5. Return ONLY valid JSON.`;
 }
 
 export function buildAnalysisPrompt(topic: string, articles: Array<{
@@ -124,7 +109,7 @@ export function buildAnalysisPrompt(topic: string, articles: Array<{
     .map((a) => `- ${a.title} (${a.source}): ${a.summary}`)
     .join("\n");
 
-  return `You are a senior intelligence analyst producing a deep analysis report.
+  return `Write a deep analysis report on the following topic.
 
 **Analysis type:** ${type}
 **Topic:** ${topic}
@@ -132,14 +117,12 @@ export function buildAnalysisPrompt(topic: string, articles: Array<{
 **Supporting intelligence:**
 ${articleList}
 
-**Instructions:**
-Write a comprehensive analysis report in markdown format. Include:
+Write in markdown with these sections:
 1. Executive Summary
 2. Detailed Analysis
 3. Key Findings
 4. Implications
 5. Recommendations
 
-Write in a professional, analytical style appropriate for a technology executive audience.
-Be specific, cite sources where relevant, and provide actionable insights.`;
+Focus on technical depth and engineering implications. Be specific and cite sources.`;
 }
