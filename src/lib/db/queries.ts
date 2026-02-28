@@ -53,6 +53,15 @@ export async function getArticlesWithEnrichments(opts: {
 } = {}) {
   const { limit = 50, offset = 0 } = opts;
 
+  const conditions = [];
+
+  if (opts.search) {
+    conditions.push(like(schema.articles.title, `%${opts.search}%`));
+  }
+  if (opts.category) {
+    conditions.push(eq(schema.sources.category, opts.category));
+  }
+
   const result = await db
     .select({
       article: schema.articles,
@@ -62,6 +71,7 @@ export async function getArticlesWithEnrichments(opts: {
     .from(schema.articles)
     .leftJoin(schema.enrichments, eq(schema.articles.id, schema.enrichments.articleId))
     .leftJoin(schema.sources, eq(schema.articles.sourceId, schema.sources.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(schema.articles.publishedAt))
     .limit(limit)
     .offset(offset);

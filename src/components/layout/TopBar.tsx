@@ -128,14 +128,24 @@ export function TopBar() {
 
       <div className="flex items-center gap-2">
         {/* Search */}
-        <div className="relative hidden sm:block">
+        <form
+          className="relative hidden sm:block"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const input = e.currentTarget.querySelector("input");
+            const q = input?.value.trim();
+            if (q) {
+              router.push(`/feed?q=${encodeURIComponent(q)}`);
+            }
+          }}
+        >
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
           <input
             type="text"
             placeholder="Search intelligence..."
             className="w-48 lg:w-64 bg-background border border-border rounded-lg pl-9 pr-4 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
           />
-        </div>
+        </form>
 
         {/* Refresh */}
         <div className="relative">
