@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Markdown } from "@/components/ui/Markdown";
 import { getAnalysisById } from "@/lib/db/queries";
 
 export const dynamic = "force-dynamic";
@@ -27,9 +28,7 @@ export default async function AnalysisDetailPage({
           </span>
           <span className="text-xs text-text-muted">{analysis.modelUsed}</span>
         </div>
-        <div className="prose-dark">
-          <div dangerouslySetInnerHTML={{ __html: analysis.markdownContent }} />
-        </div>
+        <Markdown content={analysis.markdownContent} />
       </Card>
     </div>
   );

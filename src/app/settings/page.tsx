@@ -2,16 +2,18 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { getAllSources, getDefaultPersona, getArticleCount, getSourceStats } from "@/lib/db/queries";
+import { getDailyUsageSummary } from "@/lib/pipeline/usage";
 import type { PersonaConfig } from "@/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const [sources, persona, articleCount, sourceStats] = await Promise.all([
+  const [sources, persona, articleCount, sourceStats, usage] = await Promise.all([
     getAllSources(),
     getDefaultPersona(),
     getArticleCount(),
     getSourceStats(),
+    getDailyUsageSummary(),
   ]);
 
   const config = persona?.config as PersonaConfig | null;
@@ -109,6 +111,48 @@ export default async function SettingsPage() {
               </div>
             </div>
           )}
+        </Card>
+
+        {/* Daily Usage / Cost Control */}
+        <Card className="lg:col-span-2">
+          <h3 className="text-sm font-semibold text-text-primary mb-3">
+            Daily Usage — {new Date().toISOString().split("T")[0]}
+          </h3>
+          <p className="text-xs text-text-muted mb-3">
+            Each pipeline runs once automatically via cron. You can manually refresh up to 2 additional times per day.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-2 pr-4 text-text-muted font-medium">Pipeline</th>
+                  <th className="text-center py-2 px-4 text-text-muted font-medium">Cron Runs</th>
+                  <th className="text-center py-2 px-4 text-text-muted font-medium">Manual Refreshes</th>
+                  <th className="text-right py-2 text-text-muted font-medium">Tokens Used</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(usage).map(([pipeline, data]) => (
+                  <tr key={pipeline} className="border-b border-border last:border-0">
+                    <td className="py-2 pr-4 text-text-primary font-medium capitalize">{pipeline}</td>
+                    <td className="py-2 px-4 text-center">
+                      <span className={data.cronUsed >= data.cronLimit ? "text-critical" : "text-text-secondary"}>
+                        {data.cronUsed}/{data.cronLimit}
+                      </span>
+                    </td>
+                    <td className="py-2 px-4 text-center">
+                      <span className={data.manualUsed >= data.manualLimit ? "text-critical" : "text-text-secondary"}>
+                        {data.manualUsed}/{data.manualLimit}
+                      </span>
+                    </td>
+                    <td className="py-2 text-right text-text-secondary">
+                      {data.totalTokens > 0 ? data.totalTokens.toLocaleString() : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </Card>
 
         {/* Pipeline Endpoints */}

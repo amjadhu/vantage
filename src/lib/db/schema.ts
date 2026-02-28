@@ -97,6 +97,18 @@ export const trends = sqliteTable("trends", {
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
 });
 
+export const pipelineRuns = sqliteTable("pipeline_runs", {
+  id: text("id").primaryKey(),
+  pipeline: text("pipeline").notNull(), // fetch, enrich, connect, briefing, analysis
+  trigger: text("trigger").notNull(), // cron, manual
+  status: text("status").notNull(), // success, failed
+  tokenCount: integer("token_count").default(0),
+  itemsProcessed: integer("items_processed").default(0),
+  errorMessage: text("error_message"),
+  date: text("date").notNull(), // YYYY-MM-DD for daily grouping
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+});
+
 export const analyses = sqliteTable("analyses", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
