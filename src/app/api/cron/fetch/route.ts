@@ -4,7 +4,7 @@ import { seedAll } from "@/lib/db/seed";
 import { checkDailyLimit, recordPipelineRun } from "@/lib/pipeline/usage";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
