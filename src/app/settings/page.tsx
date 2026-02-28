@@ -71,15 +71,14 @@ export default async function SettingsPage() {
             Daily Usage — {new Date().toISOString().split("T")[0]}
           </h3>
           <p className="text-xs text-text-muted mb-3">
-            Each pipeline runs once automatically via cron. You can manually refresh up to 2 additional times per day.
+            All pipelines are on-demand only. Use the Run Pipeline panel above to trigger runs. Limited to 2 runs per step per day.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left py-2 pr-4 text-text-muted font-medium">Pipeline</th>
-                  <th className="text-center py-2 px-4 text-text-muted font-medium">Cron Runs</th>
-                  <th className="text-center py-2 px-4 text-text-muted font-medium">Manual Refreshes</th>
+                  <th className="text-center py-2 px-4 text-text-muted font-medium">Runs Today</th>
                   <th className="text-right py-2 text-text-muted font-medium">Tokens Used</th>
                 </tr>
               </thead>
@@ -88,13 +87,8 @@ export default async function SettingsPage() {
                   <tr key={pipeline} className="border-b border-border last:border-0">
                     <td className="py-2 pr-4 text-text-primary font-medium capitalize">{pipeline}</td>
                     <td className="py-2 px-4 text-center">
-                      <span className={data.cronUsed >= data.cronLimit ? "text-critical" : "text-text-secondary"}>
-                        {data.cronUsed}/{data.cronLimit}
-                      </span>
-                    </td>
-                    <td className="py-2 px-4 text-center">
-                      <span className={data.manualUsed >= data.manualLimit ? "text-critical" : "text-text-secondary"}>
-                        {data.manualUsed}/{data.manualLimit}
+                      <span className={(data.cronUsed + data.manualUsed) >= data.manualLimit ? "text-critical" : "text-text-secondary"}>
+                        {data.cronUsed + data.manualUsed}/{data.manualLimit}
                       </span>
                     </td>
                     <td className="py-2 text-right text-text-secondary">
