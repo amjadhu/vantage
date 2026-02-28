@@ -5,7 +5,20 @@ import { runEnrichmentPipeline } from "@/lib/pipeline/enrich";
 import { runConnectionPipeline } from "@/lib/pipeline/connect";
 import { runBriefingPipeline } from "@/lib/pipeline/briefing";
 import { seedAll } from "@/lib/db/seed";
-import { checkDailyLimit, recordPipelineRun } from "@/lib/pipeline/usage";
+import { checkDailyLimit, recordPipelineRun, getDailyUsageSummary } from "@/lib/pipeline/usage";
+
+export async function getRefreshStatus(): Promise<{
+  runsUsed: number;
+  runsLimit: number;
+}> {
+  const usage = await getDailyUsageSummary();
+  // The limiting factor is the step with the most usage
+  const enrichUsage = usage.enrich;
+  return {
+    runsUsed: enrichUsage.manualUsed + enrichUsage.cronUsed,
+    runsLimit: enrichUsage.manualLimit,
+  };
+}
 
 type PipelineResult = {
   success: boolean;
