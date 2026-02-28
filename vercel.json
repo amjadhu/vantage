@@ -2,15 +2,15 @@
   "crons": [
     {
       "path": "/api/cron/fetch",
-      "schedule": "0 */2 * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/cron/enrich",
-      "schedule": "15 */2 * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/cron/connect",
-      "schedule": "0 */4 * * *"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/cron/briefing",
