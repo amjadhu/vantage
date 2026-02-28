@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { PipelineRunner } from "@/components/settings/PipelineRunner";
 import { getAllSources, getArticleCount, getSourceStats } from "@/lib/db/queries";
 import { getDailyUsageSummary } from "@/lib/pipeline/usage";
 
@@ -61,28 +62,8 @@ export default async function SettingsPage() {
           )}
         </Card>
 
-        {/* Pipeline Endpoints */}
-        <Card>
-          <h3 className="text-sm font-semibold text-text-primary mb-3">Pipeline Endpoints</h3>
-          <div className="space-y-2">
-            {[
-              { name: "Fetch Articles", path: "/api/cron/fetch", desc: "Fetch from all sources" },
-              { name: "Enrich Articles", path: "/api/cron/enrich", desc: "AI enrichment pipeline" },
-              { name: "Find Connections", path: "/api/cron/connect", desc: "Cross-article connections" },
-              { name: "Generate Briefing", path: "/api/cron/briefing", desc: "Daily tech briefing" },
-            ].map((ep) => (
-              <div key={ep.path} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
-                <div>
-                  <p className="text-xs text-text-primary font-medium">{ep.name}</p>
-                  <p className="text-xs text-text-muted">{ep.desc}</p>
-                </div>
-                <code className="text-xs text-accent bg-accent/10 px-2 py-0.5 rounded">
-                  {ep.path}
-                </code>
-              </div>
-            ))}
-          </div>
-        </Card>
+        {/* Pipeline Runner */}
+        <PipelineRunner />
 
         {/* Daily Usage / Cost Control */}
         <Card className="lg:col-span-2">
