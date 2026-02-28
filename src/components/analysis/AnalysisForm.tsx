@@ -55,7 +55,7 @@ export function AnalysisForm() {
             type="text"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder="e.g., AI infrastructure trends, CrowdStrike vs Palo Alto, zero-trust architecture..."
+            placeholder="e.g., AI infrastructure trends, zero-trust architecture, cloud-native security..."
             className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
             disabled={loading}
           />
