@@ -1,9 +1,81 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Sun, Moon, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
+import { runPipelineStep } from "@/app/settings/actions";
+import { useRouter } from "next/navigation";
+
+const STEPS = ["fetch", "enrich", "connect", "briefing"] as const;
+const STEP_LABELS: Record<string, string> = {
+  fetch: "Fetching articles",
+  enrich: "Enriching",
+  connect: "Finding connections",
+  briefing: "Generating briefing",
+};
 
 export function TopBar() {
+  const router = useRouter();
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [running, setRunning] = useState(false);
+  const [currentStep, setCurrentStep] = useState("");
+  const [stepIndex, setStepIndex] = useState(0);
+  const [error, setError] = useState("");
+  const [lastRefresh, setLastRefresh] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("theme") as "dark" | "light" | null;
+    setTheme(saved === "light" ? "light" : "dark");
+    const lr = localStorage.getItem("lastRefresh");
+    if (lr) setLastRefresh(lr);
+  }, []);
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.className = next;
+    localStorage.setItem("theme", next);
+  }
+
+  async function handleRefresh() {
+    if (running) return;
+    setRunning(true);
+    setError("");
+
+    for (let i = 0; i < STEPS.length; i++) {
+      const step = STEPS[i];
+      setStepIndex(i);
+      setCurrentStep(STEP_LABELS[step]);
+
+      const result = await runPipelineStep(step);
+
+      if (!result.success) {
+        setError(result.message);
+        break;
+      }
+    }
+
+    const now = new Date().toISOString();
+    localStorage.setItem("lastRefresh", now);
+    setLastRefresh(now);
+    setRunning(false);
+    setCurrentStep("");
+    router.refresh();
+  }
+
+  function formatLastRefresh() {
+    if (!lastRefresh) return null;
+    const d = new Date(lastRefresh);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return "just now";
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHrs = Math.floor(diffMin / 60);
+    if (diffHrs < 24) return `${diffHrs}h ago`;
+    return format(d, "MMM d");
+  }
+
   return (
     <header className="sticky top-0 z-40 h-14 bg-surface/80 backdrop-blur-sm border-b border-border flex items-center justify-between px-4 lg:px-6">
       <div className="flex items-center gap-4 ml-10 lg:ml-0">
@@ -18,13 +90,53 @@ export function TopBar() {
         </span>
       </div>
 
-      <div className="relative hidden sm:block">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
-        <input
-          type="text"
-          placeholder="Search intelligence..."
-          className="w-48 lg:w-64 bg-background border border-border rounded-lg pl-9 pr-4 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
-        />
+      <div className="flex items-center gap-2">
+        {/* Search */}
+        <div className="relative hidden sm:block">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
+          <input
+            type="text"
+            placeholder="Search intelligence..."
+            className="w-48 lg:w-64 bg-background border border-border rounded-lg pl-9 pr-4 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+          />
+        </div>
+
+        {/* Refresh */}
+        <button
+          onClick={handleRefresh}
+          disabled={running}
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-border text-text-secondary hover:text-text-primary hover:border-border-bright disabled:opacity-70 transition-colors"
+          title={lastRefresh ? `Last refresh: ${formatLastRefresh()}` : "Run pipeline"}
+        >
+          <RefreshCw className={`h-4 w-4 ${running ? "animate-spin" : ""}`} />
+          {running ? (
+            <span className="text-xs text-accent hidden sm:block">
+              {currentStep} ({stepIndex + 1}/{STEPS.length})
+            </span>
+          ) : (
+            lastRefresh && (
+              <span className="text-xs text-text-muted hidden sm:block">
+                {formatLastRefresh()}
+              </span>
+            )
+          )}
+        </button>
+
+        {/* Error toast */}
+        {error && !running && (
+          <span className="text-xs text-critical max-w-40 truncate hidden sm:block" title={error}>
+            {error}
+          </span>
+        )}
+
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors"
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
       </div>
     </header>
   );

@@ -17,7 +17,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var t=localStorage.getItem('theme');document.documentElement.className=t==='light'?'light':'dark'})()`,
+          }}
+        />
+      </head>
       <body className={`${inter.className} antialiased`}>
         <Sidebar />
         <div className="lg:ml-56 min-h-screen">
