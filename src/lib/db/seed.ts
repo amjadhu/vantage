@@ -1,4 +1,5 @@
 import { db, schema } from "./client";
+import { eq } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import type { PersonaConfig } from "@/types";
 
@@ -17,6 +18,8 @@ export async function seedSources() {
     { id: uuid(), name: "The Hacker News", type: "rss", url: "https://thehackernews.com/feeds/posts/default", category: "cyber", fetchIntervalMinutes: 120 },
     { id: uuid(), name: "CISA Alerts", type: "rss", url: "https://www.cisa.gov/news.xml", category: "cyber", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "Microsoft Security Blog", type: "rss", url: "https://www.microsoft.com/en-us/security/blog/feed/", category: "cyber", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "Google Project Zero", type: "rss", url: "https://googleprojectzero.blogspot.com/feeds/posts/default", category: "cyber", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "Google Threat Intelligence", type: "rss", url: "https://cloud.google.com/blog/topics/threat-intelligence/rss", category: "cyber", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "CISA KEV", type: "cisa", url: "https://www.cisa.gov/known-exploited-vulnerabilities-catalog", category: "cyber", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "NIST NVD", type: "nist_nvd", url: "https://services.nvd.nist.gov/rest/json/cves/2.0", category: "cyber", fetchIntervalMinutes: 360 },
     // ── General Tech ───────────────────────────────────────────────
@@ -31,15 +34,30 @@ export async function seedSources() {
     { id: uuid(), name: "Google AI Blog", type: "rss", url: "https://blog.google/technology/ai/rss/", category: "tech", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "Hugging Face Blog", type: "rss", url: "https://huggingface.co/blog/feed.xml", category: "tech", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "Simon Willison", type: "rss", url: "https://simonwillison.net/atom/everything/", category: "tech", fetchIntervalMinutes: 240 },
-    { id: uuid(), name: "Lilian Weng", type: "rss", url: "https://lilianweng.github.io/index.xml", category: "tech", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "Lilian Weng", type: "rss", url: "https://lilianweng.github.io/index.xml", category: "research", fetchIntervalMinutes: 360 },
+    // ── Research ──────────────────────────────────────────────────
+    { id: uuid(), name: "arXiv CS.AI", type: "rss", url: "https://rss.arxiv.org/rss/cs.AI", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "arXiv CS.CR", type: "rss", url: "https://rss.arxiv.org/rss/cs.CR", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "arXiv CS.LG", type: "rss", url: "https://rss.arxiv.org/rss/cs.LG", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "Google Research Blog", type: "rss", url: "https://blog.research.google/feeds/posts/default", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "DeepMind Blog", type: "rss", url: "https://deepmind.google/blog/rss.xml", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "The Gradient", type: "rss", url: "https://thegradient.pub/rss/", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "Microsoft Research", type: "rss", url: "https://www.microsoft.com/en-us/research/feed/", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "Apple Machine Learning", type: "rss", url: "https://machinelearning.apple.com/rss.xml", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "BAIR Blog", type: "rss", url: "https://bair.berkeley.edu/blog/feed.xml", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "NVIDIA Deep Learning", type: "rss", url: "https://blogs.nvidia.com/blog/category/deep-learning/feed/", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "PyTorch Blog", type: "rss", url: "https://pytorch.org/blog/feed.xml", category: "research", fetchIntervalMinutes: 360 },
     // ── Cloud / Infrastructure ─────────────────────────────────────
     { id: uuid(), name: "InfoQ", type: "rss", url: "https://feed.infoq.com/", category: "tech", fetchIntervalMinutes: 180 },
     { id: uuid(), name: "AWS News Blog", type: "rss", url: "https://aws.amazon.com/blogs/aws/feed/", category: "tech", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "Azure Blog", type: "rss", url: "https://azure.microsoft.com/en-us/blog/feed/", category: "tech", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "Google Cloud Blog", type: "rss", url: "https://cloud.google.com/blog/rss", category: "tech", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "Cloudflare Blog", type: "rss", url: "https://blog.cloudflare.com/rss/", category: "tech", fetchIntervalMinutes: 240 },
+    // ── CrowdStrike ───────────────────────────────────────────────
+    { id: uuid(), name: "CrowdStrike Blog", type: "rss", url: "https://www.crowdstrike.com/blog/feed/", category: "crowdstrike", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "Seeking Alpha CRWD", type: "rss", url: "https://seekingalpha.com/api/sa/combined/CRWD.xml", category: "crowdstrike", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "Yahoo Finance CRWD", type: "rss", url: "https://feeds.finance.yahoo.com/rss/2.0/headline?s=CRWD", category: "crowdstrike", fetchIntervalMinutes: 240 },
     // ── Watchlist Company Blogs ────────────────────────────────────
-    { id: uuid(), name: "CrowdStrike Blog", type: "rss", url: "https://www.crowdstrike.com/blog/feed/", category: "company", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "Palo Alto Networks Blog", type: "rss", url: "https://www.paloaltonetworks.com/blog/rss", category: "company", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "SentinelOne Blog", type: "rss", url: "https://www.sentinelone.com/blog/feed/", category: "company", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "Fortinet Blog", type: "rss", url: "https://feeds.fortinet.com/fortinet/blog/threat-research", category: "company", fetchIntervalMinutes: 240 },
@@ -63,6 +81,19 @@ export async function seedSources() {
   );
 
   console.log(`Seeded ${newSources.length} new sources (${existingSources.length} already existed)`);
+
+  // Recategorize sources that changed category
+  const recategorizations = [
+    { name: "Lilian Weng", category: "research" },
+    { name: "CrowdStrike Blog", category: "crowdstrike" },
+  ];
+  for (const { name, category } of recategorizations) {
+    const existing = existingSources.find((s) => s.name === name);
+    if (existing && existing.category !== category) {
+      await db.update(schema.sources).set({ category }).where(eq(schema.sources.name, name));
+      console.log(`Recategorized "${name}" from ${existing.category} → ${category}`);
+    }
+  }
 }
 
 export async function seedPersona() {

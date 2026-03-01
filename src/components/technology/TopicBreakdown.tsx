@@ -3,13 +3,15 @@ import { Card } from "@/components/ui/Card";
 interface TopicBreakdownProps {
   topics: { tag: string; count: number }[];
   total: number;
+  label?: string;
+  title?: string;
 }
 
-export function TopicBreakdown({ topics, total }: TopicBreakdownProps) {
+export function TopicBreakdown({ topics, total, label = "tech", title = "Topic Breakdown" }: TopicBreakdownProps) {
   return (
     <Card>
       <h3 className="text-sm font-semibold text-text-primary mb-4">
-        Topic Breakdown
+        {title}
       </h3>
       <div className="space-y-2.5">
         {topics.slice(0, 10).map((topic) => {
@@ -31,7 +33,7 @@ export function TopicBreakdown({ topics, total }: TopicBreakdownProps) {
         })}
       </div>
       <div className="mt-3 pt-3 border-t border-border text-center">
-        <span className="text-xs text-text-muted">{total} tech articles analyzed</span>
+        <span className="text-xs text-text-muted">{total} {label} articles analyzed</span>
       </div>
     </Card>
   );

@@ -3,11 +3,11 @@ import { db, schema } from "@/lib/db/client";
 import { eq, and, sql } from "drizzle-orm";
 
 const DAILY_LIMITS: Record<string, { cron: number; manual: number }> = {
-  fetch: { cron: 1, manual: 2 },
-  enrich: { cron: 1, manual: 2 },
-  connect: { cron: 1, manual: 2 },
-  briefing: { cron: 1, manual: 2 },
-  analysis: { cron: 0, manual: 2 },
+  fetch: { cron: 1, manual: 3 },
+  enrich: { cron: 1, manual: 3 },
+  connect: { cron: 1, manual: 3 },
+  briefing: { cron: 1, manual: 3 },
+  analysis: { cron: 0, manual: 3 },
 };
 
 function getToday(): string {

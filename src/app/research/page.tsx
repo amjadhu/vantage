@@ -1,15 +1,15 @@
-import { Cpu } from "lucide-react";
+import { FlaskConical } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
 import { TopicBreakdown } from "@/components/technology/TopicBreakdown";
-import { TechStoryCard } from "@/components/technology/TechStoryCard";
+import { ResearchCard } from "@/components/research/ResearchCard";
 import { db, schema } from "@/lib/db/client";
 import { eq, desc } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-export default async function TechnologyPage() {
+export default async function ResearchPage() {
   const results = await db
     .select({
       article: schema.articles,
@@ -19,11 +19,11 @@ export default async function TechnologyPage() {
     .from(schema.articles)
     .innerJoin(schema.sources, eq(schema.articles.sourceId, schema.sources.id))
     .leftJoin(schema.enrichments, eq(schema.articles.id, schema.enrichments.articleId))
-    .where(eq(schema.sources.category, "tech"))
+    .where(eq(schema.sources.category, "research"))
     .orderBy(desc(schema.articles.publishedAt))
     .limit(60);
 
-  // Extract top stories — prefer enriched by relevance, fall back to most recent
+  // Extract top papers — prefer enriched by relevance, fall back to most recent
   const sorted = [...results].sort((a, b) => {
     const aScore = a.enrichment?.relevanceScore ?? -1;
     const bScore = b.enrichment?.relevanceScore ?? -1;
@@ -32,8 +32,8 @@ export default async function TechnologyPage() {
   });
 
   const hasEnrichments = results.some((r) => r.enrichment);
-  const topStories = sorted.slice(0, 5);
-  const remaining = results.filter((r) => !topStories.some((t) => t.article.id === r.article.id));
+  const topPapers = sorted.slice(0, 5);
+  const remaining = results.filter((r) => !topPapers.some((t) => t.article.id === r.article.id));
 
   // Build topic breakdown from category tags, fall back to source breakdown
   const tagCounts: Record<string, number> = {};
@@ -64,8 +64,8 @@ export default async function TechnologyPage() {
   return (
     <div>
       <PageHeader
-        title="Technology"
-        description="R&D breakthroughs, industry news, emerging tech, and market insights"
+        title="Research"
+        description="Cutting-edge research, technical deep-dives, and R&D intelligence"
       />
 
       {results.length > 0 ? (
@@ -75,20 +75,21 @@ export default async function TechnologyPage() {
               <TopicBreakdown
                 topics={topics}
                 total={results.length}
+                label="research"
                 title={hasTopics ? "Topic Breakdown" : "Sources"}
               />
             </div>
             <div className="lg:col-span-2">
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Badge variant="info">Top Stories</Badge>
+                  <Badge variant="info">Key Papers</Badge>
                   <span className="text-xs text-text-muted">
                     {hasEnrichments ? "Highest relevance" : "Most recent"}
                   </span>
                 </div>
                 <div className="space-y-3">
-                  {topStories.map(({ article, enrichment, source }) => (
-                    <TechStoryCard
+                  {topPapers.map(({ article, enrichment, source }) => (
+                    <ResearchCard
                       key={article.id}
                       article={article}
                       enrichment={enrichment}
@@ -102,11 +103,11 @@ export default async function TechnologyPage() {
 
           <div>
             <h3 className="text-sm font-semibold text-text-primary mb-3">
-              All Tech Intelligence ({results.length})
+              All Research ({results.length})
             </h3>
             <div className="space-y-3">
               {remaining.map(({ article, enrichment, source }) => (
-                <TechStoryCard
+                <ResearchCard
                   key={article.id}
                   article={article}
                   enrichment={enrichment}
@@ -118,9 +119,9 @@ export default async function TechnologyPage() {
         </div>
       ) : (
         <EmptyState
-          icon={Cpu}
-          title="No technology intel yet"
-          description="Technology articles from your sources will appear here. Run the fetch pipeline to populate news from TechCrunch, Ars Technica, Hacker News, and more."
+          icon={FlaskConical}
+          title="No research intel yet"
+          description="Research papers and technical deep-dives from arXiv, Google Research, DeepMind, and more will appear here. Run the fetch pipeline to populate."
         />
       )}
     </div>

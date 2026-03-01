@@ -1,6 +1,8 @@
 import Parser from "rss-parser";
 import type { SourceConnector, SourceConfig, RawArticle } from "@/types";
 
+const MAX_ARTICLES_PER_SOURCE = 15;
+
 const parser = new Parser({
   timeout: 15000,
   headers: {
@@ -15,7 +17,7 @@ export class RssConnector implements SourceConnector {
     try {
       const feed = await parser.parseURL(config.url);
 
-      return (feed.items || []).map((item) => ({
+      const articles = (feed.items || []).map((item) => ({
         sourceId: config.id,
         externalId: item.guid || item.link || item.title || "",
         title: (item.title || "Untitled").trim(),
@@ -26,6 +28,9 @@ export class RssConnector implements SourceConnector {
         publishedAt: item.pubDate ? new Date(item.pubDate) : new Date(),
         categories: item.categories || [],
       }));
+
+      // Cap per-source to prevent any single feed from dominating
+      return articles.slice(0, MAX_ARTICLES_PER_SOURCE);
     } catch (error) {
       console.error(`[RssConnector] Failed to fetch ${config.name} (${config.url}):`, error);
       return [];
