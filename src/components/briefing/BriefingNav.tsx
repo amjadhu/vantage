@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/Card";
-import { format } from "date-fns";
 
 interface BriefingNavProps {
   briefings: Array<{
@@ -8,6 +7,18 @@ interface BriefingNavProps {
     modelUsed: string;
   }>;
   currentId: string;
+}
+
+function formatPT(dateStr: string): string {
+  return new Date(dateStr).toLocaleString("en-US", {
+    timeZone: "America/Los_Angeles",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
 export function BriefingNav({ briefings, currentId }: BriefingNavProps) {
@@ -26,7 +37,7 @@ export function BriefingNav({ briefings, currentId }: BriefingNavProps) {
                 : "text-text-secondary hover:bg-surface-hover"
             }`}
           >
-            {format(new Date(b.generatedAt), "MMM d, yyyy h:mm a")}
+            {formatPT(b.generatedAt)}
           </div>
         ))}
         {briefings.length === 0 && (

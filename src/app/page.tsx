@@ -27,7 +27,17 @@ export default async function BriefingPage() {
             <Card>
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
                 <span className="text-xs text-text-muted">
-                  Generated {new Date(briefing.generatedAt).toLocaleString()}
+                  Generated{" "}
+                  {new Date(briefing.generatedAt).toLocaleString("en-US", {
+                    timeZone: "America/Los_Angeles",
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                    timeZoneName: "short",
+                  })}
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-text-muted">
