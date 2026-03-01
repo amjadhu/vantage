@@ -13,11 +13,11 @@ interface SentimentHeatmapProps {
   items: SentimentHeatmapItem[];
 }
 
-const sentimentConfig = [
-  { key: "positive" as const, label: "Positive", color: "bg-positive" },
-  { key: "neutral" as const, label: "Neutral", color: "bg-info" },
-  { key: "mixed" as const, label: "Mixed", color: "bg-medium" },
-  { key: "negative" as const, label: "Negative", color: "bg-negative" },
+const sentimentOrder = [
+  { key: "negative" as const, label: "Negative", colorClass: "bg-negative" },
+  { key: "mixed" as const, label: "Mixed", colorClass: "bg-medium" },
+  { key: "neutral" as const, label: "Neutral", colorClass: "bg-neutral opacity-70" },
+  { key: "positive" as const, label: "Positive", colorClass: "bg-positive" },
 ];
 
 export function SentimentHeatmap({ items }: SentimentHeatmapProps) {
@@ -32,39 +32,49 @@ export function SentimentHeatmap({ items }: SentimentHeatmapProps) {
 
       {/* Legend */}
       <div className="flex items-center gap-4 mb-4">
-        {sentimentConfig.map((s) => (
+        {sentimentOrder.map((s) => (
           <div key={s.key} className="flex items-center gap-1.5">
-            <div className={`w-2.5 h-2.5 rounded-sm ${s.color} opacity-80`} />
+            <div className={`w-2.5 h-2.5 rounded-[2px] ${s.colorClass}`} />
             <span className="text-[10px] text-text-muted">{s.label}</span>
           </div>
         ))}
+        <span className="text-[10px] text-text-muted ml-auto opacity-60">
+          each square = 1 article
+        </span>
       </div>
 
-      <div className="space-y-2">
-        {items.map((item) => (
-          <div key={item.topic} className="flex items-center gap-3">
-            <span className="text-xs text-text-secondary w-36 truncate shrink-0">
-              {item.topic}
-            </span>
-            <div className="flex-1 h-5 flex rounded overflow-hidden">
-              {sentimentConfig.map((s) => {
-                const pct = item.total > 0 ? (item[s.key] / item.total) * 100 : 0;
-                if (pct === 0) return null;
-                return (
+      <div className="space-y-3">
+        {items.map((item) => {
+          // Build array of dots ordered: negative → mixed → neutral → positive
+          const dots: { key: string; colorClass: string }[] = [];
+          for (const s of sentimentOrder) {
+            const count = item[s.key];
+            for (let i = 0; i < count; i++) {
+              dots.push({ key: `${s.key}-${i}`, colorClass: s.colorClass });
+            }
+          }
+
+          return (
+            <div key={item.topic}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-text-secondary truncate">
+                  {item.topic}
+                </span>
+                <span className="text-[10px] text-text-muted ml-2 shrink-0">
+                  {item.total}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-[3px]">
+                {dots.map((dot) => (
                   <div
-                    key={s.key}
-                    className={`${s.color} opacity-80 transition-all`}
-                    style={{ width: `${pct}%` }}
-                    title={`${s.label}: ${item[s.key]} (${Math.round(pct)}%)`}
+                    key={dot.key}
+                    className={`w-2.5 h-2.5 rounded-[2px] ${dot.colorClass} hover:scale-150 transition-transform`}
                   />
-                );
-              })}
+                ))}
+              </div>
             </div>
-            <span className="text-[10px] text-text-muted w-6 text-right shrink-0">
-              {item.total}
-            </span>
-          </div>
-        ))}
+          );
+        })}
         {items.length === 0 && (
           <p className="text-xs text-text-muted text-center py-4">
             No sentiment data available
