@@ -2,42 +2,46 @@ import { TrendingUp } from "lucide-react";
 import { subDays, format } from "date-fns";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { TopicVelocity, type TopicVelocityItem } from "@/components/trends/TopicVelocity";
-import { SentimentHeatmap, type SentimentHeatmapItem } from "@/components/trends/SentimentHeatmap";
-import { ImpactTimeline, type ImpactTimelineDay } from "@/components/trends/ImpactTimeline";
-import { EmergingTopics, type EmergingTopicsData } from "@/components/trends/EmergingTopics";
+import { TrendingTopics, type TrendingTopic } from "@/components/trends/TrendingTopics";
+import { HighImpact, type HighImpactItem } from "@/components/trends/HighImpact";
+import { StoryThreads, type StoryThread } from "@/components/trends/StoryThreads";
+import { EmergingSignals, type EmergingSignalsData } from "@/components/trends/EmergingSignals";
 import { db, schema } from "@/lib/db/client";
-import { eq, gte } from "drizzle-orm";
+import { eq, gte, desc, or, and } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
 export default async function TrendsPage() {
   const now = new Date();
   const threeDaysAgo = subDays(now, 3).toISOString();
+  const sevenDaysAgo = subDays(now, 7).toISOString();
   const tenDaysAgo = subDays(now, 10).toISOString();
-  const fourteenDaysAgo = subDays(now, 14).toISOString();
 
-  // Fetch enrichments joined with articles for the last 14 days
+  // ── Fetch articles + enrichments + sources (last 7 days) ─────────
   const rows = await db
     .select({
-      categoryTags: schema.enrichments.categoryTags,
-      sentiment: schema.enrichments.sentiment,
-      impactLevel: schema.enrichments.impactLevel,
+      articleId: schema.articles.id,
+      title: schema.articles.title,
+      url: schema.articles.url,
       publishedAt: schema.articles.publishedAt,
+      sourceName: schema.sources.name,
+      categoryTags: schema.enrichments.categoryTags,
+      entities: schema.enrichments.entities,
+      impactLevel: schema.enrichments.impactLevel,
+      relevanceScore: schema.enrichments.relevanceScore,
+      executiveSummary: schema.enrichments.executiveSummary,
     })
-    .from(schema.enrichments)
-    .innerJoin(
-      schema.articles,
-      eq(schema.enrichments.articleId, schema.articles.id)
-    )
-    .where(gte(schema.articles.publishedAt, fourteenDaysAgo));
+    .from(schema.articles)
+    .innerJoin(schema.enrichments, eq(schema.articles.id, schema.enrichments.articleId))
+    .innerJoin(schema.sources, eq(schema.articles.sourceId, schema.sources.id))
+    .where(gte(schema.articles.publishedAt, tenDaysAgo));
 
   if (rows.length === 0) {
     return (
       <div>
         <PageHeader
           title="Trends"
-          description="Topic velocity, sentiment patterns, and emerging signals"
+          description="What's happening, what matters, and how stories connect"
         />
         <EmptyState
           icon={TrendingUp}
@@ -48,9 +52,163 @@ export default async function TrendsPage() {
     );
   }
 
-  // ── 1. Topic Velocity ──────────────────────────────────────────────
-  const recentCounts: Record<string, number> = {};
-  const priorCounts: Record<string, number> = {};
+  // ── Fetch article connections (last 7 days) ──────────────────────
+  const connections = await db
+    .select({
+      sourceArticleId: schema.articleConnections.sourceArticleId,
+      targetArticleId: schema.articleConnections.targetArticleId,
+      relationshipType: schema.articleConnections.relationshipType,
+      reasoning: schema.articleConnections.reasoning,
+      confidence: schema.articleConnections.confidence,
+    })
+    .from(schema.articleConnections)
+    .where(gte(schema.articleConnections.createdAt, sevenDaysAgo))
+    .orderBy(desc(schema.articleConnections.confidence));
+
+  // Build article lookup
+  const articleMap = new Map(rows.map((r) => [r.articleId, r]));
+
+  // ── 1. Trending Topics ──────────────────────────────────────────
+  // Aggregate daily counts per topic over 7 days
+  const topicDailyCounts: Record<string, Record<string, number>> = {};
+  const topicTotals: Record<string, number> = {};
+
+  for (const row of rows) {
+    const tags = (row.categoryTags as string[]) || [];
+    const dateStr = row.publishedAt.slice(0, 10);
+    for (const tag of tags) {
+      const t = tag.toLowerCase().trim();
+      if (!t) continue;
+      if (!topicDailyCounts[t]) topicDailyCounts[t] = {};
+      topicDailyCounts[t][dateStr] = (topicDailyCounts[t][dateStr] || 0) + 1;
+      topicTotals[t] = (topicTotals[t] || 0) + 1;
+    }
+  }
+
+  // Build sparkline (7 days) and trend for each topic
+  const last7Days: string[] = [];
+  for (let i = 6; i >= 0; i--) {
+    last7Days.push(format(subDays(now, i), "yyyy-MM-dd"));
+  }
+
+  const trendingTopics: TrendingTopic[] = Object.entries(topicTotals)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10)
+    .map(([topic, totalCount]) => {
+      const daily = topicDailyCounts[topic] || {};
+      const sparkline = last7Days.map((d) => daily[d] || 0);
+
+      // Compare last 3 days vs prior 4 days
+      const recent = sparkline.slice(4).reduce((a, b) => a + b, 0);
+      const prior = sparkline.slice(0, 4).reduce((a, b) => a + b, 0);
+      const ratio = recent / Math.max(prior, 1);
+      const trend: "rising" | "falling" | "stable" =
+        ratio >= 1.5 ? "rising" : ratio <= 0.5 ? "falling" : "stable";
+
+      return { topic, totalCount, trend, sparkline };
+    });
+
+  // ── 2. High Impact ──────────────────────────────────────────────
+  const sevenDaysAgoStr = sevenDaysAgo;
+  const highImpactItems: HighImpactItem[] = rows
+    .filter(
+      (r) =>
+        (r.impactLevel === "critical" || r.impactLevel === "high") &&
+        r.publishedAt >= sevenDaysAgoStr
+    )
+    .sort((a, b) => b.relevanceScore - a.relevanceScore)
+    .slice(0, 8)
+    .map((r) => ({
+      title: r.title,
+      url: r.url,
+      sourceName: r.sourceName,
+      publishedAt: r.publishedAt,
+      impactLevel: r.impactLevel,
+      relevanceScore: r.relevanceScore,
+      executiveSummary: r.executiveSummary,
+    }));
+
+  // ── 3. Story Threads ────────────────────────────────────────────
+  // Build thread clusters from connections using union-find
+  const parent: Record<string, string> = {};
+  function find(x: string): string {
+    if (!parent[x]) parent[x] = x;
+    if (parent[x] !== x) parent[x] = find(parent[x]);
+    return parent[x];
+  }
+  function union(a: string, b: string) {
+    const pa = find(a);
+    const pb = find(b);
+    if (pa !== pb) parent[pa] = pb;
+  }
+
+  for (const conn of connections) {
+    if (articleMap.has(conn.sourceArticleId) && articleMap.has(conn.targetArticleId)) {
+      union(conn.sourceArticleId, conn.targetArticleId);
+    }
+  }
+
+  // Group articles by cluster
+  const clusters: Record<string, Set<string>> = {};
+  for (const conn of connections) {
+    if (!articleMap.has(conn.sourceArticleId) || !articleMap.has(conn.targetArticleId)) continue;
+    const root = find(conn.sourceArticleId);
+    if (!clusters[root]) clusters[root] = new Set();
+    clusters[root].add(conn.sourceArticleId);
+    clusters[root].add(conn.targetArticleId);
+  }
+
+  // Build threads from clusters
+  const storyThreads: StoryThread[] = Object.values(clusters)
+    .filter((articleIds) => articleIds.size >= 2)
+    .map((articleIds) => {
+      const ids = Array.from(articleIds);
+      const articles = ids
+        .map((id) => {
+          const a = articleMap.get(id);
+          if (!a) return null;
+          return {
+            id,
+            title: a.title,
+            url: a.url,
+            sourceName: a.sourceName,
+            publishedAt: a.publishedAt,
+          };
+        })
+        .filter(Boolean) as StoryThread["articles"];
+
+      // Sort articles by publishedAt
+      articles.sort((a, b) => a.publishedAt.localeCompare(b.publishedAt));
+
+      // Find connections between consecutive articles in the thread
+      const threadConnections: StoryThread["connections"] = [];
+      for (let i = 1; i < articles.length; i++) {
+        const conn = connections.find(
+          (c) =>
+            (c.sourceArticleId === articles[i - 1].id && c.targetArticleId === articles[i].id) ||
+            (c.sourceArticleId === articles[i].id && c.targetArticleId === articles[i - 1].id)
+        );
+        threadConnections.push(
+          conn
+            ? { relationshipType: conn.relationshipType, reasoning: conn.reasoning, confidence: conn.confidence }
+            : { relationshipType: "related", reasoning: "", confidence: 0 }
+        );
+      }
+
+      // Average confidence for sorting
+      const avgConfidence =
+        threadConnections.reduce((sum, c) => sum + c.confidence, 0) / Math.max(threadConnections.length, 1);
+
+      return { articles: articles.slice(0, 3), connections: threadConnections, avgConfidence };
+    })
+    .sort((a, b) => (b as any).avgConfidence - (a as any).avgConfidence)
+    .slice(0, 5)
+    .map(({ articles, connections: conns }) => ({ articles, connections: conns }));
+
+  // ── 4. Emerging Signals ─────────────────────────────────────────
+  // New topics: appeared in last 3 days, not in prior 7
+  const recentTopics: Record<string, number> = {};
+  const priorTopics: Record<string, number> = {};
 
   for (const row of rows) {
     const tags = (row.categoryTags as string[]) || [];
@@ -59,134 +217,58 @@ export default async function TrendsPage() {
       const t = tag.toLowerCase().trim();
       if (!t) continue;
       if (isRecent) {
-        recentCounts[t] = (recentCounts[t] || 0) + 1;
+        recentTopics[t] = (recentTopics[t] || 0) + 1;
       } else {
-        priorCounts[t] = (priorCounts[t] || 0) + 1;
+        priorTopics[t] = (priorTopics[t] || 0) + 1;
       }
     }
   }
 
-  const allTopics = new Set([...Object.keys(recentCounts), ...Object.keys(priorCounts)]);
-  const velocityItems: TopicVelocityItem[] = [];
-  for (const topic of allTopics) {
-    const recent = recentCounts[topic] || 0;
-    const prior = priorCounts[topic] || 0;
-    if (recent === 0 && prior === 0) continue;
-    velocityItems.push({
-      topic,
-      recentCount: recent,
-      priorCount: prior,
-      velocity: recent / Math.max(prior, 1),
-    });
-  }
-  // Sort by velocity desc, then by recent count desc
-  velocityItems.sort((a, b) => b.velocity - a.velocity || b.recentCount - a.recentCount);
-  const topVelocity = velocityItems.filter((i) => i.recentCount > 0).slice(0, 15);
+  const newTopics = Object.entries(recentTopics)
+    .filter(([topic]) => !priorTopics[topic])
+    .map(([topic, count]) => ({ topic, count }))
+    .sort((a, b) => b.count - a.count);
 
-  // ── 2. Sentiment Heatmap ───────────────────────────────────────────
-  const topicSentiment: Record<string, Record<string, number>> = {};
-  const topicTotals: Record<string, number> = {};
-
+  // Trending entities: aggregate from enrichments
+  const entityCounts: Record<string, { name: string; type: string; count: number }> = {};
   for (const row of rows) {
-    const tags = (row.categoryTags as string[]) || [];
-    const sentiment = row.sentiment || "neutral";
-    for (const tag of tags) {
-      const t = tag.toLowerCase().trim();
-      if (!t) continue;
-      if (!topicSentiment[t]) topicSentiment[t] = { positive: 0, negative: 0, neutral: 0, mixed: 0 };
-      topicSentiment[t][sentiment] = (topicSentiment[t][sentiment] || 0) + 1;
-      topicTotals[t] = (topicTotals[t] || 0) + 1;
+    const entities = (row.entities as Array<{ name: string; type: string }>) || [];
+    for (const entity of entities) {
+      const key = `${entity.type}:${entity.name}`;
+      if (!entityCounts[key]) {
+        entityCounts[key] = { name: entity.name, type: entity.type, count: 0 };
+      }
+      entityCounts[key].count += 1;
     }
   }
 
-  const sentimentItems: SentimentHeatmapItem[] = Object.entries(topicSentiment)
-    .map(([topic, counts]) => ({
-      topic,
-      positive: counts.positive || 0,
-      negative: counts.negative || 0,
-      neutral: counts.neutral || 0,
-      mixed: counts.mixed || 0,
-      total: topicTotals[topic] || 0,
-    }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 15);
+  const trendingEntities = Object.values(entityCounts)
+    .filter((e) => e.count >= 2)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 20);
 
-  // ── 3. Impact Timeline ─────────────────────────────────────────────
-  const dailyImpact: Record<string, Record<string, number>> = {};
+  const emergingSignals: EmergingSignalsData = { newTopics, trendingEntities };
 
-  for (const row of rows) {
-    const date = row.publishedAt.slice(0, 10); // YYYY-MM-DD
-    const impact = row.impactLevel || "informational";
-    if (!dailyImpact[date]) dailyImpact[date] = { critical: 0, high: 0, medium: 0, low: 0, informational: 0 };
-    dailyImpact[date][impact] = (dailyImpact[date][impact] || 0) + 1;
-  }
-
-  // Build sorted 14-day array (fill missing days with zeros)
-  const timelineDays: ImpactTimelineDay[] = [];
-  for (let i = 13; i >= 0; i--) {
-    const d = subDays(now, i);
-    const dateStr = format(d, "yyyy-MM-dd");
-    const label = format(d, "MMM d");
-    const counts = dailyImpact[dateStr] || { critical: 0, high: 0, medium: 0, low: 0, informational: 0 };
-    timelineDays.push({
-      date: dateStr,
-      label,
-      critical: counts.critical || 0,
-      high: counts.high || 0,
-      medium: counts.medium || 0,
-      low: counts.low || 0,
-      informational: counts.informational || 0,
-      total: Object.values(counts).reduce((a, b) => a + b, 0),
-    });
-  }
-
-  // ── 4. Emerging vs Established vs Fading ───────────────────────────
-  const emergingData: EmergingTopicsData = {
-    emerging: [],
-    established: [],
-    fading: [],
-  };
-
-  for (const topic of allTopics) {
-    const recent = recentCounts[topic] || 0;
-    const prior = priorCounts[topic] || 0;
-    const total = recent + prior;
-
-    if (recent > 0 && prior === 0) {
-      // Emerging: appeared in last 3 days, NOT in prior 7
-      emergingData.emerging.push({ topic, count: recent });
-    } else if (recent > 0 && prior > 0 && total >= 5) {
-      // Established: present in both, 5+ total
-      emergingData.established.push({ topic, count: total });
-    } else if (recent === 0 && prior >= 3) {
-      // Fading: only in prior window, 3+ mentions
-      emergingData.fading.push({ topic, count: prior });
-    }
-  }
-
-  emergingData.emerging.sort((a, b) => b.count - a.count);
-  emergingData.established.sort((a, b) => b.count - a.count);
-  emergingData.fading.sort((a, b) => b.count - a.count);
-
+  // ── Render ──────────────────────────────────────────────────────
   return (
     <div>
       <PageHeader
         title="Trends"
-        description="Topic velocity, sentiment patterns, and emerging signals"
+        description="What's happening, what matters, and how stories connect"
       />
 
       <div className="space-y-6">
-        {/* Row 1: Velocity + Emerging side by side */}
+        {/* Row 1: Trending Topics + High Impact */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <TopicVelocity items={topVelocity} />
-          <EmergingTopics data={emergingData} />
+          <TrendingTopics items={trendingTopics} />
+          <HighImpact items={highImpactItems} />
         </div>
 
-        {/* Row 2: Sentiment Heatmap full width */}
-        <SentimentHeatmap items={sentimentItems} />
+        {/* Row 2: Story Threads */}
+        <StoryThreads threads={storyThreads} />
 
-        {/* Row 3: Impact Timeline full width */}
-        <ImpactTimeline days={timelineDays} />
+        {/* Row 3: Emerging Signals */}
+        <EmergingSignals data={emergingSignals} />
       </div>
     </div>
   );
