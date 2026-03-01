@@ -32,7 +32,7 @@ export class HackerNewsConnector implements SourceConnector {
     const articles: RawArticle[] = [];
 
     try {
-      for (const keyword of KEYWORDS.slice(0, 5)) {
+      for (const keyword of KEYWORDS) {
         const response = await fetch(
           `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(keyword)}&tags=story&hitsPerPage=5`,
           { headers: { "User-Agent": "Vantage Intelligence Dashboard/1.0" } }

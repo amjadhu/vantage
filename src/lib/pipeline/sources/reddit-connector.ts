@@ -16,7 +16,7 @@ interface RedditPost {
   };
 }
 
-const SUBREDDITS = ["cybersecurity", "netsec", "technology"];
+const SUBREDDITS = ["cybersecurity", "netsec", "technology", "MachineLearning", "artificial", "sysadmin"];
 
 export class RedditConnector implements SourceConnector {
   type = "reddit";

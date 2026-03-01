@@ -7,31 +7,43 @@ export async function seedSources() {
   const existingNames = new Set(existingSources.map((s) => s.name));
 
   const sources = [
-    // Cybersecurity
+    // ── Cybersecurity ──────────────────────────────────────────────
     { id: uuid(), name: "KrebsOnSecurity", type: "rss", url: "https://krebsonsecurity.com/feed/", category: "cyber", fetchIntervalMinutes: 120 },
     { id: uuid(), name: "BleepingComputer", type: "rss", url: "https://www.bleepingcomputer.com/feed/", category: "cyber", fetchIntervalMinutes: 120 },
     { id: uuid(), name: "Dark Reading", type: "rss", url: "https://www.darkreading.com/rss.xml", category: "cyber", fetchIntervalMinutes: 120 },
     { id: uuid(), name: "SecurityWeek", type: "rss", url: "https://www.securityweek.com/feed/", category: "cyber", fetchIntervalMinutes: 120 },
     { id: uuid(), name: "The Record", type: "rss", url: "https://therecord.media/feed/", category: "cyber", fetchIntervalMinutes: 120 },
     { id: uuid(), name: "Schneier on Security", type: "rss", url: "https://www.schneier.com/feed/", category: "cyber", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "The Hacker News", type: "rss", url: "https://thehackernews.com/feeds/posts/default", category: "cyber", fetchIntervalMinutes: 120 },
+    { id: uuid(), name: "CISA Alerts", type: "rss", url: "https://www.cisa.gov/news.xml", category: "cyber", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "Microsoft Security Blog", type: "rss", url: "https://www.microsoft.com/en-us/security/blog/feed/", category: "cyber", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "CISA KEV", type: "cisa", url: "https://www.cisa.gov/known-exploited-vulnerabilities-catalog", category: "cyber", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "NIST NVD", type: "nist_nvd", url: "https://services.nvd.nist.gov/rest/json/cves/2.0", category: "cyber", fetchIntervalMinutes: 360 },
-    // General Tech
+    // ── General Tech ───────────────────────────────────────────────
     { id: uuid(), name: "TechCrunch", type: "rss", url: "https://techcrunch.com/feed/", category: "tech", fetchIntervalMinutes: 120 },
     { id: uuid(), name: "Ars Technica", type: "rss", url: "https://feeds.arstechnica.com/arstechnica/index", category: "tech", fetchIntervalMinutes: 120 },
     { id: uuid(), name: "The Verge", type: "rss", url: "https://www.theverge.com/rss/index.xml", category: "tech", fetchIntervalMinutes: 120 },
     { id: uuid(), name: "Wired", type: "rss", url: "https://www.wired.com/feed/rss", category: "tech", fetchIntervalMinutes: 120 },
     { id: uuid(), name: "The Register", type: "rss", url: "https://www.theregister.com/headlines.atom", category: "tech", fetchIntervalMinutes: 120 },
-    // AI/ML
+    // ── AI/ML ──────────────────────────────────────────────────────
     { id: uuid(), name: "MIT Technology Review", type: "rss", url: "https://www.technologyreview.com/feed/", category: "tech", fetchIntervalMinutes: 180 },
     { id: uuid(), name: "OpenAI Blog", type: "rss", url: "https://openai.com/blog/rss.xml", category: "tech", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "Google AI Blog", type: "rss", url: "https://blog.google/technology/ai/rss/", category: "tech", fetchIntervalMinutes: 360 },
-    // Engineering/Infrastructure
+    { id: uuid(), name: "Hugging Face Blog", type: "rss", url: "https://huggingface.co/blog/feed.xml", category: "tech", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "Simon Willison", type: "rss", url: "https://simonwillison.net/atom/everything/", category: "tech", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "Lilian Weng", type: "rss", url: "https://lilianweng.github.io/index.xml", category: "tech", fetchIntervalMinutes: 360 },
+    // ── Cloud / Infrastructure ─────────────────────────────────────
     { id: uuid(), name: "InfoQ", type: "rss", url: "https://feed.infoq.com/", category: "tech", fetchIntervalMinutes: 180 },
     { id: uuid(), name: "AWS News Blog", type: "rss", url: "https://aws.amazon.com/blogs/aws/feed/", category: "tech", fetchIntervalMinutes: 240 },
-    // Company
+    { id: uuid(), name: "Azure Blog", type: "rss", url: "https://azure.microsoft.com/en-us/blog/feed/", category: "tech", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "Google Cloud Blog", type: "rss", url: "https://cloud.google.com/blog/rss", category: "tech", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "Cloudflare Blog", type: "rss", url: "https://blog.cloudflare.com/rss/", category: "tech", fetchIntervalMinutes: 240 },
+    // ── Watchlist Company Blogs ────────────────────────────────────
     { id: uuid(), name: "CrowdStrike Blog", type: "rss", url: "https://www.crowdstrike.com/blog/feed/", category: "company", fetchIntervalMinutes: 240 },
-    // Community
+    { id: uuid(), name: "Palo Alto Networks Blog", type: "rss", url: "https://www.paloaltonetworks.com/blog/rss", category: "company", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "SentinelOne Blog", type: "rss", url: "https://www.sentinelone.com/blog/feed/", category: "company", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "Fortinet Blog", type: "rss", url: "https://feeds.fortinet.com/fortinet/blog/threat-research", category: "company", fetchIntervalMinutes: 240 },
+    // ── Community ──────────────────────────────────────────────────
     { id: uuid(), name: "Hacker News", type: "hackernews", url: "https://hn.algolia.com/api/v1/search", category: "tech", fetchIntervalMinutes: 120 },
     { id: uuid(), name: "Reddit", type: "reddit", url: "https://www.reddit.com", category: "tech", fetchIntervalMinutes: 180 },
   ];
