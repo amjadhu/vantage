@@ -10,7 +10,8 @@ import { eq, desc } from "drizzle-orm";
 export const dynamic = "force-dynamic";
 
 export default async function ResearchPage() {
-  const results = await db
+  // Fetch a larger pool, then round-robin by source for diversity
+  const pool = await db
     .select({
       article: schema.articles,
       enrichment: schema.enrichments,
@@ -21,7 +22,26 @@ export default async function ResearchPage() {
     .leftJoin(schema.enrichments, eq(schema.articles.id, schema.enrichments.articleId))
     .where(eq(schema.sources.category, "research"))
     .orderBy(desc(schema.articles.publishedAt))
-    .limit(60);
+    .limit(200);
+
+  // Group by source name, preserving recency order within each group
+  const bySource = new Map<string, typeof pool>();
+  for (const row of pool) {
+    const name = row.source?.name || "Unknown";
+    if (!bySource.has(name)) bySource.set(name, []);
+    bySource.get(name)!.push(row);
+  }
+
+  // Round-robin pick: every source gets representation before any gets a second slot
+  const results: typeof pool = [];
+  const iterators = [...bySource.values()].map((rows) => ({ rows, idx: 0 }));
+  while (results.length < 60 && iterators.some((it) => it.idx < it.rows.length)) {
+    for (const it of iterators) {
+      if (it.idx < it.rows.length && results.length < 60) {
+        results.push(it.rows[it.idx++]);
+      }
+    }
+  }
 
   // Extract top papers — prefer enriched by relevance, fall back to most recent
   const sorted = [...results].sort((a, b) => {

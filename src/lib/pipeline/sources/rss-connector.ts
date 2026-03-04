@@ -30,7 +30,9 @@ export class RssConnector implements SourceConnector {
       }));
 
       // Cap per-source to prevent any single feed from dominating
-      return articles.slice(0, MAX_ARTICLES_PER_SOURCE);
+      // arXiv feeds contain hundreds of daily papers — use a tighter cap
+      const cap = config.name.startsWith("arXiv") ? 5 : MAX_ARTICLES_PER_SOURCE;
+      return articles.slice(0, cap);
     } catch (error) {
       console.error(`[RssConnector] Failed to fetch ${config.name} (${config.url}):`, error);
       return [];
