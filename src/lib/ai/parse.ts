@@ -47,14 +47,37 @@ function extractJson(text: string): string {
   return text;
 }
 
+function sanitizeJson(text: string): string {
+  // Remove trailing commas before ] or }
+  return text.replace(/,\s*([\]}])/g, "$1");
+}
+
+function repairTruncatedArray(text: string): string {
+  // If the JSON array was truncated mid-object, try to close it cleanly
+  // Find the last complete object (last '}' that's part of an array element)
+  const lastCloseBrace = text.lastIndexOf("}");
+  if (lastCloseBrace === -1) return text;
+
+  const truncated = text.substring(0, lastCloseBrace + 1);
+  // Close the array
+  return truncated + "]";
+}
+
 export function parseEnrichmentResponse(text: string): EnrichmentResult {
-  const jsonStr = extractJson(text);
+  const jsonStr = sanitizeJson(extractJson(text));
   const parsed = JSON.parse(jsonStr);
   return enrichmentSchema.parse(parsed);
 }
 
 export function parseConnectionResponse(text: string): ArticleConnection[] {
-  const jsonStr = extractJson(text);
-  const parsed = JSON.parse(jsonStr);
-  return connectionSchema.parse(parsed);
+  const jsonStr = sanitizeJson(extractJson(text));
+  try {
+    const parsed = JSON.parse(jsonStr);
+    return connectionSchema.parse(parsed);
+  } catch {
+    // LLM response may be truncated — try to recover partial array
+    const repaired = sanitizeJson(repairTruncatedArray(jsonStr));
+    const parsed = JSON.parse(repaired);
+    return connectionSchema.parse(parsed);
+  }
 }
