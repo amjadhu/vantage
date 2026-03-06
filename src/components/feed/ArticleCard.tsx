@@ -34,7 +34,10 @@ const impactVariant: Record<string, "critical" | "high" | "medium" | "low" | "in
 
 export function ArticleCard({ article, enrichment, sourceName }: ArticleCardProps) {
   const displaySummary = enrichment?.executiveSummary || article.summary || "";
-  const tags = enrichment?.categoryTags || article.categories || [];
+  const rawTags = enrichment?.categoryTags || article.categories || [];
+  const tags = Array.isArray(rawTags)
+    ? rawTags.map((t) => (typeof t === "string" ? t : String(t)))
+    : [];
 
   return (
     <Card hover className="group">
