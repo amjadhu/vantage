@@ -20,15 +20,15 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { href: "/", label: "Briefing", icon: Newspaper },
-  { href: "/feed", label: "Intel Feed", icon: Rss },
+  { href: "/", label: "Tech Briefing", icon: Newspaper },
+  { href: "/global-news", label: "Global Briefing", icon: Globe },
   { href: "/cyber", label: "Cybersecurity", icon: Shield },
-  { href: "/crowdstrike", label: "CrowdStrike", icon: Crosshair },
   { href: "/technology", label: "Technology", icon: Cpu },
-  { href: "/global-news", label: "Global News", icon: Globe },
+  { href: "/crowdstrike", label: "CrowdStrike", icon: Crosshair },
   { href: "/research", label: "Research", icon: FlaskConical },
   { href: "/trends", label: "Trends", icon: TrendingUp },
   { href: "/analysis", label: "Analysis", icon: FileText },
+  { href: "/feed", label: "Feed", icon: Rss },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
