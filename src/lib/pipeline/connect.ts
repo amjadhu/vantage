@@ -22,7 +22,7 @@ export async function runConnectionPipeline(): Promise<{
     .innerJoin(schema.enrichments, eq(schema.articles.id, schema.enrichments.articleId))
     .where(gte(schema.articles.publishedAt, cutoff.toISOString()))
     .orderBy(desc(schema.enrichments.relevanceScore))
-    .limit(30);
+    .limit(15);
 
   if (enrichedArticles.length < 2) {
     return { connectionsFound: 0, totalTokens: 0 };
@@ -40,7 +40,7 @@ export async function runConnectionPipeline(): Promise<{
   const response = await callClaude({
     model: "claude-sonnet-4-5-20250929",
     prompt,
-    maxTokens: 4096,
+    maxTokens: 2048,
     temperature: 0.2,
   });
 

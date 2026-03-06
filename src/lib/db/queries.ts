@@ -100,11 +100,20 @@ export async function getUnenrichedArticles(limit = 20) {
     .select({ articleId: schema.enrichments.articleId })
     .from(schema.enrichments);
 
+  // Get source IDs for global category (skip enrichment — briefing synthesizes from raw data)
+  const globalSourceIds = db
+    .select({ id: schema.sources.id })
+    .from(schema.sources)
+    .where(eq(schema.sources.category, "global"));
+
   const result = await db
     .select()
     .from(schema.articles)
     .where(
-      sql`${schema.articles.id} NOT IN (${enrichedIds})`
+      and(
+        sql`${schema.articles.id} NOT IN (${enrichedIds})`,
+        sql`${schema.articles.sourceId} NOT IN (${globalSourceIds})`
+      )
     )
     .orderBy(desc(schema.articles.publishedAt))
     .limit(limit);
@@ -151,12 +160,15 @@ export async function insertEnrichment(data: typeof schema.enrichments.$inferIns
 // ============ Briefings ============
 
 export async function getLatestBriefing(personaId?: string) {
-  const conditions = personaId ? eq(schema.briefings.personaId, personaId) : undefined;
+  const conditions = [eq(schema.briefings.type, "tech")];
+  if (personaId) {
+    conditions.push(eq(schema.briefings.personaId, personaId));
+  }
 
   const result = await db
     .select()
     .from(schema.briefings)
-    .where(conditions)
+    .where(and(...conditions))
     .orderBy(desc(schema.briefings.generatedAt))
     .limit(1);
 
@@ -167,6 +179,29 @@ export async function getBriefings(limit = 10) {
   return db
     .select()
     .from(schema.briefings)
+    .where(eq(schema.briefings.type, "tech"))
+    .orderBy(desc(schema.briefings.generatedAt))
+    .limit(limit);
+}
+
+// ============ Global News Briefings ============
+
+export async function getLatestGlobalNewsBriefing() {
+  const result = await db
+    .select()
+    .from(schema.briefings)
+    .where(eq(schema.briefings.type, "global-news"))
+    .orderBy(desc(schema.briefings.generatedAt))
+    .limit(1);
+
+  return result[0] || null;
+}
+
+export async function getGlobalNewsBriefings(limit = 10) {
+  return db
+    .select()
+    .from(schema.briefings)
+    .where(eq(schema.briefings.type, "global-news"))
     .orderBy(desc(schema.briefings.generatedAt))
     .limit(limit);
 }

@@ -59,6 +59,7 @@ export const articleConnections = sqliteTable("article_connections", {
 export const briefings = sqliteTable("briefings", {
   id: text("id").primaryKey(),
   personaId: text("persona_id").notNull().references(() => personas.id),
+  type: text("type").notNull().default("tech"),
   markdownContent: text("markdown_content").notNull(),
   articleIds: text("article_ids", { mode: "json" }).$type<string[]>(),
   generatedAt: text("generated_at").notNull().$defaultFn(() => new Date().toISOString()),

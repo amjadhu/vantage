@@ -96,6 +96,51 @@ List all articles referenced in this briefing as markdown links, grouped by sect
 Write in a crisp, analytical style. Connect dots between stories. Focus on technical depth and engineering implications, not just business summaries.`;
 }
 
+export function buildGlobalNewsBriefingPrompt(articles: Array<{
+  title: string;
+  summary: string;
+  source: string;
+  url: string;
+}>): string {
+  const articleList = articles
+    .map((a, i) => `${i + 1}. ${a.title} (${a.source})\n   ${a.summary}\n   ${a.url}`)
+    .join("\n\n");
+
+  return `You are an impartial planetary observer — think of yourself as an alien species studying Earth. Your job is to synthesize a global intelligence briefing that is non-US-centric, geographically diverse, and analytically opinionated. Cover all regions and topics without over-weighting any single source or nation.
+
+**Date:** ${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+
+**Raw Intelligence (${articles.length} articles from diverse global sources):**
+
+${articleList}
+
+**Instructions:**
+Generate a concise global intelligence briefing in markdown (1-2 pages max). Use these exact sections:
+
+## Key Global Developments
+- 3-5 bullet points on the most consequential developments worldwide. Prioritize by global impact, not media volume.
+
+## Regional Spotlight
+Pick 2-3 regions with the most significant developments today. For each, write a short paragraph with context and source links.
+
+## Geopolitics & Conflict
+Active conflicts, diplomatic shifts, alliance dynamics, sanctions. Skip if nothing notable. Cite sources inline.
+
+## Economy & Trade
+Global economic signals, trade policy, supply chains, commodity shifts. Cite sources inline.
+
+## Science & Environment
+Climate, health, scientific breakthroughs with global implications. Skip if nothing notable. Cite sources inline.
+
+## Emerging Signals
+Weak signals or under-covered stories that could become significant. 2-3 bullets max.
+
+## Sources
+List all articles referenced as markdown links: "- [Article Title](URL) — Source Name"
+
+**IMPORTANT:** Every claim must have an inline source link. The reader should be able to verify any point. Be analytically opinionated — don't just summarize, connect dots and highlight what matters. Keep it concise: 1-2 pages maximum.`;
+}
+
 export function buildConnectionPrompt(articles: Array<{
   id: string;
   title: string;

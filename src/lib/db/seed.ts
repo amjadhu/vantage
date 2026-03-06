@@ -77,6 +77,19 @@ export async function seedSources() {
     // ── Community ──────────────────────────────────────────────────
     { id: uuid(), name: "Hacker News", type: "hackernews", url: "https://hn.algolia.com/api/v1/search", category: "tech", fetchIntervalMinutes: 120 },
     { id: uuid(), name: "Reddit", type: "reddit", url: "https://www.reddit.com", category: "tech", fetchIntervalMinutes: 180 },
+    // ── Global News ──────────────────────────────────────────────
+    { id: uuid(), name: "Reuters", type: "rss", url: "https://www.reutersagency.com/feed/", category: "global", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "AP News", type: "rss", url: "https://rsshub.app/apnews/topics/apf-topnews", category: "global", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "AFP", type: "rss", url: "https://www.france24.com/en/rss", category: "global", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "BBC World", type: "rss", url: "https://feeds.bbci.co.uk/news/world/rss.xml", category: "global", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "The Guardian World", type: "rss", url: "https://www.theguardian.com/world/rss", category: "global", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "DW News", type: "rss", url: "https://rss.dw.com/rdf/rss-en-all", category: "global", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "France 24", type: "rss", url: "https://www.france24.com/en/rss", category: "global", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "Al Jazeera English", type: "rss", url: "https://www.aljazeera.com/xml/rss/all.xml", category: "global", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "NHK World", type: "rss", url: "https://www3.nhk.or.jp/rss/news/cat0.xml", category: "global", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "South China Morning Post", type: "rss", url: "https://www.scmp.com/rss/91/feed", category: "global", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "AllAfrica", type: "rss", url: "https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf", category: "global", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "Americas Quarterly", type: "rss", url: "https://www.americasquarterly.org/feed/", category: "global", fetchIntervalMinutes: 240 },
   ];
 
   const newSources = sources.filter((s) => !existingNames.has(s.name));

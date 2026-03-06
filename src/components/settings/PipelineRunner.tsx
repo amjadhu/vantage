@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { runPipelineStep } from "@/app/settings/actions";
 import { Card } from "@/components/ui/Card";
 
-type Step = "fetch" | "enrich" | "connect" | "briefing";
+type Step = "fetch" | "enrich" | "connect" | "briefing" | "global-news";
 
 const STEPS: { key: Step; label: string; desc: string }[] = [
   { key: "fetch", label: "Fetch Articles", desc: "Pull latest from all sources" },
   { key: "enrich", label: "Enrich", desc: "AI analysis of new articles" },
   { key: "connect", label: "Find Connections", desc: "Cross-article relationships" },
   { key: "briefing", label: "Generate Briefing", desc: "Daily intelligence summary" },
+  { key: "global-news", label: "Global News Briefing", desc: "Global intelligence digest (Sonnet)" },
 ];
 
 type StepStatus = "idle" | "running" | "done" | "error" | "skipped";
@@ -23,19 +24,21 @@ export function PipelineRunner() {
     enrich: "idle",
     connect: "idle",
     briefing: "idle",
+    "global-news": "idle",
   });
   const [messages, setMessages] = useState<Record<Step, string>>({
     fetch: "",
     enrich: "",
     connect: "",
     briefing: "",
+    "global-news": "",
   });
   const [running, setRunning] = useState(false);
 
   async function runAll() {
     setRunning(true);
-    setStatuses({ fetch: "idle", enrich: "idle", connect: "idle", briefing: "idle" });
-    setMessages({ fetch: "", enrich: "", connect: "", briefing: "" });
+    setStatuses({ fetch: "idle", enrich: "idle", connect: "idle", briefing: "idle", "global-news": "idle" });
+    setMessages({ fetch: "", enrich: "", connect: "", briefing: "", "global-news": "" });
 
     for (const step of STEPS) {
       setStatuses((prev) => ({ ...prev, [step.key]: "running" }));
@@ -122,7 +125,7 @@ export function PipelineRunner() {
         </button>
       </div>
       <p className="text-xs text-text-muted mb-4">
-        Run the full pipeline (fetch → enrich → connect → briefing) or individual steps. Limited to 2 manual runs per step per day.
+        Run the full pipeline (fetch → enrich → connect → briefing → global news) or individual steps. Limited to 3 manual runs per step per day.
       </p>
 
       <div className="space-y-2">
