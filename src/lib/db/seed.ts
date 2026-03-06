@@ -1,5 +1,5 @@
 import { db, schema } from "./client";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { v4 as uuid } from "uuid";
 import type { PersonaConfig } from "@/types";
 
@@ -180,7 +180,18 @@ export async function seedWatchlistCompanies() {
   console.log(`Seeded ${companies.length} watchlist companies`);
 }
 
+async function runMigrations() {
+  // Add 'type' column to briefings table if it doesn't exist
+  try {
+    await db.run(sql`ALTER TABLE briefings ADD COLUMN type TEXT NOT NULL DEFAULT 'tech'`);
+    console.log("Migration: added 'type' column to briefings table");
+  } catch {
+    // Column already exists — ignore
+  }
+}
+
 export async function seedAll() {
+  await runMigrations();
   await seedSources();
   await seedPersona();
   await seedWatchlistCompanies();

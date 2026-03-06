@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
+import { sql } from "drizzle-orm";
 import * as schema from "./schema";
 
 function getClient() {
@@ -16,3 +17,15 @@ function getClient() {
 const client = getClient();
 export const db = drizzle(client, { schema });
 export { schema };
+
+// Run lightweight schema migrations on startup
+let migrated = false;
+export async function ensureMigrations() {
+  if (migrated) return;
+  migrated = true;
+  try {
+    await db.run(sql`ALTER TABLE briefings ADD COLUMN type TEXT NOT NULL DEFAULT 'tech'`);
+  } catch {
+    // Column already exists
+  }
+}

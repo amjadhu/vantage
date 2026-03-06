@@ -5,10 +5,12 @@ import { Markdown } from "@/components/ui/Markdown";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getLatestBriefing, getBriefings } from "@/lib/db/queries";
 import { BriefingNav } from "@/components/briefing/BriefingNav";
+import { ensureMigrations } from "@/lib/db/client";
 
 export const dynamic = "force-dynamic";
 
 export default async function BriefingPage() {
+  await ensureMigrations();
   const [briefing, allBriefings] = await Promise.all([
     getLatestBriefing(),
     getBriefings(10),

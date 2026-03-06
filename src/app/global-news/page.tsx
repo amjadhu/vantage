@@ -5,10 +5,12 @@ import { Markdown } from "@/components/ui/Markdown";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getLatestGlobalNewsBriefing, getGlobalNewsBriefings } from "@/lib/db/queries";
 import { BriefingNav } from "@/components/briefing/BriefingNav";
+import { ensureMigrations } from "@/lib/db/client";
 
 export const dynamic = "force-dynamic";
 
 export default async function GlobalNewsPage() {
+  await ensureMigrations();
   const [briefing, allBriefings] = await Promise.all([
     getLatestGlobalNewsBriefing(),
     getGlobalNewsBriefings(10),
