@@ -61,6 +61,19 @@ export async function seedSources() {
     { id: uuid(), name: "Palo Alto Networks Blog", type: "rss", url: "https://www.paloaltonetworks.com/blog/rss", category: "company", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "SentinelOne Blog", type: "rss", url: "https://www.sentinelone.com/blog/feed/", category: "company", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "Fortinet Blog", type: "rss", url: "https://feeds.fortinet.com/fortinet/blog/threat-research", category: "company", fetchIntervalMinutes: 240 },
+    // ── Threat Intelligence ────────────────────────────────────────
+    { id: uuid(), name: "Cisco Talos Blog", type: "rss", url: "https://blog.talosintelligence.com/rss/", category: "cyber", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "SANS ISC", type: "rss", url: "https://isc.sans.edu/rssfeed.xml", category: "cyber", fetchIntervalMinutes: 240 },
+    { id: uuid(), name: "Unit 42", type: "rss", url: "https://unit42.paloaltonetworks.com/feed/", category: "cyber", fetchIntervalMinutes: 240 },
+    // ── Policy & Regulatory ─────────────────────────────────────
+    { id: uuid(), name: "Lawfare", type: "rss", url: "https://www.lawfaremedia.org/feed", category: "tech", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "EFF Deeplinks", type: "rss", url: "https://www.eff.org/rss/updates.xml", category: "tech", fetchIntervalMinutes: 360 },
+    // ── DevOps & Infrastructure ──────────────────────────────────
+    { id: uuid(), name: "Kubernetes Blog", type: "rss", url: "https://kubernetes.io/feed.xml", category: "tech", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "CNCF Blog", type: "rss", url: "https://www.cncf.io/blog/feed/", category: "tech", fetchIntervalMinutes: 360 },
+    // ── Strategy & Analysis ──────────────────────────────────────
+    { id: uuid(), name: "a16z Blog", type: "rss", url: "https://a16z.com/feed/", category: "tech", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "Stratechery", type: "rss", url: "https://stratechery.com/feed/", category: "tech", fetchIntervalMinutes: 360 },
     // ── Community ──────────────────────────────────────────────────
     { id: uuid(), name: "Hacker News", type: "hackernews", url: "https://hn.algolia.com/api/v1/search", category: "tech", fetchIntervalMinutes: 120 },
     { id: uuid(), name: "Reddit", type: "reddit", url: "https://www.reddit.com", category: "tech", fetchIntervalMinutes: 180 },

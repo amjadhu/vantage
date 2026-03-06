@@ -19,7 +19,8 @@ export async function runBriefingPipeline(): Promise<{
   const yesterday = new Date();
   yesterday.setHours(yesterday.getHours() - 24);
 
-  const enrichedArticles = await db
+  // Fetch more candidates than needed so we can diversify
+  const allCandidates = await db
     .select({
       article: schema.articles,
       enrichment: schema.enrichments,
@@ -30,7 +31,42 @@ export async function runBriefingPipeline(): Promise<{
     .leftJoin(schema.sources, eq(schema.articles.sourceId, schema.sources.id))
     .where(gte(schema.articles.publishedAt, yesterday.toISOString()))
     .orderBy(desc(schema.enrichments.relevanceScore))
-    .limit(30);
+    .limit(80);
+
+  // Diversify: ensure no single source category dominates the briefing.
+  // Take top items but cap any single category at ~40% of the total.
+  const TARGET = 30;
+  const MAX_PER_CATEGORY = Math.ceil(TARGET * 0.4); // 12
+  const enrichedArticles: typeof allCandidates = [];
+  const categoryCount: Record<string, number> = {};
+
+  // First pass: always include critical/high impact items regardless of category
+  for (const item of allCandidates) {
+    if (enrichedArticles.length >= TARGET) break;
+    const impact = item.enrichment.impactLevel;
+    if (impact === "critical" || impact === "high") {
+      const cat = item.source?.category || "unknown";
+      categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+      enrichedArticles.push(item);
+    }
+  }
+
+  // Second pass: fill remaining slots with diversity cap
+  for (const item of allCandidates) {
+    if (enrichedArticles.length >= TARGET) break;
+    if (enrichedArticles.some((e) => e.article.id === item.article.id)) continue;
+    const cat = item.source?.category || "unknown";
+    if ((categoryCount[cat] || 0) >= MAX_PER_CATEGORY) continue;
+    categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+    enrichedArticles.push(item);
+  }
+
+  // Third pass: if still under target, fill with remaining top-scored items
+  for (const item of allCandidates) {
+    if (enrichedArticles.length >= TARGET) break;
+    if (enrichedArticles.some((e) => e.article.id === item.article.id)) continue;
+    enrichedArticles.push(item);
+  }
 
   if (enrichedArticles.length === 0) {
     throw new Error("No enriched articles available for briefing");
