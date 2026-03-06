@@ -141,6 +141,56 @@ List all articles referenced as markdown links: "- [Article Title](URL) — Sour
 **IMPORTANT:** Every claim must have an inline source link. The reader should be able to verify any point. Be analytically opinionated — don't just summarize, connect dots and highlight what matters. Keep it concise: 1-2 pages maximum.`;
 }
 
+export function buildResearchBriefingPrompt(articles: Array<{
+  title: string;
+  summary: string;
+  keyFacts: string[];
+  tags: string[];
+  source: string;
+  url: string;
+}>): string {
+  const articleList = articles
+    .map((a, i) => `${i + 1}. ${a.title} (${a.source})\n   Summary: ${a.summary}\n   Key facts: ${a.keyFacts.join("; ")}\n   Tags: ${a.tags.join(", ")}\n   ${a.url}`)
+    .join("\n\n");
+
+  return `You are a senior R&D analyst synthesizing a cross-domain research intelligence briefing for technology leaders and strategists. Your coverage spans AI/ML, semiconductors, quantum computing, biotechnology, materials science, energy, robotics, space, networking, and general science.
+
+**Date:** ${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+
+**Research Intelligence (${articles.length} papers/articles from diverse R&D sources):**
+
+${articleList}
+
+**Instructions:**
+Generate a research intelligence briefing in markdown. Use these exact sections:
+
+## Key Breakthroughs
+- 3-5 genuinely novel developments that represent meaningful advances. Not incremental updates — things that shift what's possible. Each on its own line starting with "- ". Cite sources inline.
+
+## Cross-Domain Connections
+Identify 2-3 patterns spanning fields. For example: ML techniques applied to materials discovery, quantum approaches to biotech problems, semiconductor advances enabling new AI architectures. These are the insights a domain specialist would miss. Cite sources inline.
+
+## Deep Dives
+4-6 of the most impactful papers/developments with real analysis. For each:
+- **Bold title**
+- Why it matters (not just what it says)
+- Technical significance and limitations
+- Source: [Article Title](URL)
+
+Separate each with a blank line.
+
+## Strategic Implications
+What do these developments mean for tech strategy and R&D investment? Connect the dots between research and commercial impact. 3-5 bullet points. Cite sources inline.
+
+## Emerging Research Signals
+2-3 weak signals worth monitoring — early-stage work that could become significant in 6-18 months. Cite sources inline.
+
+## Sources
+List all articles referenced as markdown links: "- [Article Title](URL) — Source Name"
+
+**IMPORTANT:** Every claim must have an inline source link. Be analytically opinionated — don't just summarize, synthesize across domains and highlight what matters. Focus on technical depth, not hype.`;
+}
+
 export function buildConnectionPrompt(articles: Array<{
   id: string;
   title: string;

@@ -47,6 +47,29 @@ export async function seedSources() {
     { id: uuid(), name: "BAIR Blog", type: "rss", url: "https://bair.berkeley.edu/blog/feed.xml", category: "research", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "NVIDIA Deep Learning", type: "rss", url: "https://blogs.nvidia.com/blog/category/deep-learning/feed/", category: "research", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "PyTorch Blog", type: "rss", url: "https://pytorch.org/blog/feed.xml", category: "research", fetchIntervalMinutes: 360 },
+    // ── Research: Semiconductors ─────────────────────────────────
+    { id: uuid(), name: "IEEE Spectrum", type: "rss", url: "https://spectrum.ieee.org/feeds/feed.rss", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "Semiconductor Engineering", type: "rss", url: "https://semiengineering.com/feed/", category: "research", fetchIntervalMinutes: 360 },
+    // ── Research: Quantum ────────────────────────────────────────
+    { id: uuid(), name: "arXiv quant-ph", type: "rss", url: "https://rss.arxiv.org/rss/quant-ph", category: "research", fetchIntervalMinutes: 360 },
+    // ── Research: Biotech ────────────────────────────────────────
+    { id: uuid(), name: "arXiv q-bio", type: "rss", url: "https://rss.arxiv.org/rss/q-bio", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "Nature Biotechnology", type: "rss", url: "https://www.nature.com/nbt.rss", category: "research", fetchIntervalMinutes: 360 },
+    // ── Research: Materials ──────────────────────────────────────
+    { id: uuid(), name: "arXiv cond-mat", type: "rss", url: "https://rss.arxiv.org/rss/cond-mat", category: "research", fetchIntervalMinutes: 360 },
+    // ── Research: Energy ─────────────────────────────────────────
+    { id: uuid(), name: "DOE Research News", type: "rss", url: "https://www.energy.gov/rss/articles.xml", category: "research", fetchIntervalMinutes: 360 },
+    // ── Research: Robotics ───────────────────────────────────────
+    { id: uuid(), name: "arXiv CS.RO", type: "rss", url: "https://rss.arxiv.org/rss/cs.RO", category: "research", fetchIntervalMinutes: 360 },
+    // ── Research: Space ──────────────────────────────────────────
+    { id: uuid(), name: "NASA Research", type: "rss", url: "https://www.nasa.gov/feed/", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "SpaceNews", type: "rss", url: "https://spacenews.com/feed/", category: "research", fetchIntervalMinutes: 360 },
+    // ── Research: Systems/Networking ─────────────────────────────
+    { id: uuid(), name: "arXiv CS.NI", type: "rss", url: "https://rss.arxiv.org/rss/cs.NI", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "arXiv CS.DC", type: "rss", url: "https://rss.arxiv.org/rss/cs.DC", category: "research", fetchIntervalMinutes: 360 },
+    // ── Research: General Science ────────────────────────────────
+    { id: uuid(), name: "Nature News", type: "rss", url: "https://www.nature.com/nature.rss", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "Science Daily", type: "rss", url: "https://www.sciencedaily.com/rss/all.xml", category: "research", fetchIntervalMinutes: 360 },
     // ── Cloud / Infrastructure ─────────────────────────────────────
     { id: uuid(), name: "InfoQ", type: "rss", url: "https://feed.infoq.com/", category: "tech", fetchIntervalMinutes: 180 },
     { id: uuid(), name: "AWS News Blog", type: "rss", url: "https://aws.amazon.com/blogs/aws/feed/", category: "tech", fetchIntervalMinutes: 240 },

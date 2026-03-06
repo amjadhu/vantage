@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { runPipelineStep } from "@/app/settings/actions";
 import { Card } from "@/components/ui/Card";
 
-type Step = "fetch" | "enrich" | "connect" | "briefing" | "global-news";
+type Step = "fetch" | "enrich" | "connect" | "briefing" | "global-news" | "research-briefing";
 
 const STEPS: { key: Step; label: string; desc: string }[] = [
   { key: "fetch", label: "Fetch Articles", desc: "Pull latest from all sources" },
@@ -13,6 +13,7 @@ const STEPS: { key: Step; label: string; desc: string }[] = [
   { key: "connect", label: "Find Connections", desc: "Cross-article relationships" },
   { key: "briefing", label: "Generate Briefing", desc: "Daily intelligence summary" },
   { key: "global-news", label: "Global News Briefing", desc: "Global intelligence digest (Sonnet)" },
+  { key: "research-briefing", label: "Research Briefing", desc: "Cross-domain R&D synthesis (Sonnet)" },
 ];
 
 type StepStatus = "idle" | "running" | "done" | "error" | "skipped";
@@ -25,6 +26,7 @@ export function PipelineRunner() {
     connect: "idle",
     briefing: "idle",
     "global-news": "idle",
+    "research-briefing": "idle",
   });
   const [messages, setMessages] = useState<Record<Step, string>>({
     fetch: "",
@@ -32,13 +34,14 @@ export function PipelineRunner() {
     connect: "",
     briefing: "",
     "global-news": "",
+    "research-briefing": "",
   });
   const [running, setRunning] = useState(false);
 
   async function runAll() {
     setRunning(true);
-    setStatuses({ fetch: "idle", enrich: "idle", connect: "idle", briefing: "idle", "global-news": "idle" });
-    setMessages({ fetch: "", enrich: "", connect: "", briefing: "", "global-news": "" });
+    setStatuses({ fetch: "idle", enrich: "idle", connect: "idle", briefing: "idle", "global-news": "idle", "research-briefing": "idle" });
+    setMessages({ fetch: "", enrich: "", connect: "", briefing: "", "global-news": "", "research-briefing": "" });
 
     for (const step of STEPS) {
       setStatuses((prev) => ({ ...prev, [step.key]: "running" }));
@@ -125,7 +128,7 @@ export function PipelineRunner() {
         </button>
       </div>
       <p className="text-xs text-text-muted mb-4">
-        Run the full pipeline (fetch → enrich → connect → briefing → global news) or individual steps. Limited to 3 manual runs per step per day.
+        Run the full pipeline (fetch → enrich → connect → briefing → global news → research) or individual steps. Limited to 3 manual runs per step per day.
       </p>
 
       <div className="space-y-2">

@@ -206,6 +206,28 @@ export async function getGlobalNewsBriefings(limit = 10) {
     .limit(limit);
 }
 
+// ============ Research Briefings ============
+
+export async function getLatestResearchBriefing() {
+  const result = await db
+    .select()
+    .from(schema.briefings)
+    .where(eq(schema.briefings.type, "research"))
+    .orderBy(desc(schema.briefings.generatedAt))
+    .limit(1);
+
+  return result[0] || null;
+}
+
+export async function getResearchBriefings(limit = 10) {
+  return db
+    .select()
+    .from(schema.briefings)
+    .where(eq(schema.briefings.type, "research"))
+    .orderBy(desc(schema.briefings.generatedAt))
+    .limit(limit);
+}
+
 // ============ Personas ============
 
 export async function getDefaultPersona() {
