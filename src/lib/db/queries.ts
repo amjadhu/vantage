@@ -228,6 +228,19 @@ export async function getResearchBriefings(limit = 10) {
     .limit(limit);
 }
 
+// ============ CrowdStrike Briefings ============
+
+export async function getLatestCrowdStrikeBriefing() {
+  const result = await db
+    .select()
+    .from(schema.briefings)
+    .where(eq(schema.briefings.type, "crowdstrike"))
+    .orderBy(desc(schema.briefings.generatedAt))
+    .limit(1);
+
+  return result[0] || null;
+}
+
 // ============ Personas ============
 
 export async function getDefaultPersona() {

@@ -9,6 +9,7 @@ const DAILY_LIMITS: Record<string, { cron: number; manual: number }> = {
   briefing: { cron: 1, manual: 3 },
   "global-news": { cron: 1, manual: 3 },
   "research-briefing": { cron: 1, manual: 3 },
+  "crowdstrike-briefing": { cron: 1, manual: 3 },
   analysis: { cron: 0, manual: 3 },
 };
 

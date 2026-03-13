@@ -6,6 +6,7 @@ import { runConnectionPipeline } from "@/lib/pipeline/connect";
 import { runBriefingPipeline } from "@/lib/pipeline/briefing";
 import { runGlobalNewsBriefingPipeline } from "@/lib/pipeline/global-news";
 import { runResearchBriefingPipeline } from "@/lib/pipeline/research-briefing";
+import { runCrowdStrikeBriefingPipeline } from "@/lib/pipeline/crowdstrike-briefing";
 import { seedAll } from "@/lib/db/seed";
 import { checkDailyLimit, recordPipelineRun, getDailyUsageSummary } from "@/lib/pipeline/usage";
 
@@ -29,7 +30,7 @@ type PipelineResult = {
 };
 
 export async function runPipelineStep(
-  step: "fetch" | "enrich" | "connect" | "briefing" | "global-news" | "research-briefing"
+  step: "fetch" | "enrich" | "connect" | "briefing" | "global-news" | "research-briefing" | "crowdstrike-briefing"
 ): Promise<PipelineResult> {
   const limit = await checkDailyLimit(step, "manual");
   if (!limit.allowed) {
@@ -78,6 +79,12 @@ export async function runPipelineStep(
         const result = await runResearchBriefingPipeline();
         details = { articleCount: result.articleCount, tokens: result.totalTokens };
         await recordPipelineRun({ pipeline: "research-briefing", trigger: "manual", status: "success", tokenCount: result.totalTokens, itemsProcessed: result.articleCount });
+        break;
+      }
+      case "crowdstrike-briefing": {
+        const result = await runCrowdStrikeBriefingPipeline();
+        details = { articleCount: result.articleCount, tokens: result.totalTokens };
+        await recordPipelineRun({ pipeline: "crowdstrike-briefing", trigger: "manual", status: "success", tokenCount: result.totalTokens, itemsProcessed: result.articleCount });
         break;
       }
     }

@@ -1,10 +1,12 @@
-import { Crosshair } from "lucide-react";
+import { Crosshair, Zap } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ArticleCard } from "@/components/feed/ArticleCard";
 import { TopicBreakdown } from "@/components/technology/TopicBreakdown";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Markdown } from "@/components/ui/Markdown";
+import { getLatestCrowdStrikeBriefing } from "@/lib/db/queries";
 import { db, schema } from "@/lib/db/client";
 import { eq, desc, sql, or, like } from "drizzle-orm";
 
@@ -61,6 +63,9 @@ export default async function CrowdStrikePage() {
   );
   const results = allResults.slice(0, 60);
 
+  // Fetch the latest CrowdStrike briefing
+  const briefing = await getLatestCrowdStrikeBriefing();
+
   // Top 5 for the featured section
   const topIntel = results.slice(0, 5);
 
@@ -93,6 +98,21 @@ export default async function CrowdStrikePage() {
         title="CrowdStrike"
         description="Aggregated intel — blog posts, financial analysis, market news, and cross-category mentions"
       />
+
+      {briefing && (
+        <Card className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="h-4 w-4 text-amber-400" />
+            <h2 className="text-sm font-semibold text-text-primary">Yesterday in CrowdStrike</h2>
+            <Badge variant="info">{(briefing.articleIds as string[])?.length || 0} articles</Badge>
+            <span className="text-xs text-text-muted ml-auto">
+              {new Date(briefing.generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+              {" · "}{briefing.modelUsed}
+            </span>
+          </div>
+          <Markdown content={briefing.markdownContent} />
+        </Card>
+      )}
 
       {results.length > 0 ? (
         <div className="space-y-6">

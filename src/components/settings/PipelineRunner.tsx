@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { runPipelineStep } from "@/app/settings/actions";
 import { Card } from "@/components/ui/Card";
 
-type Step = "fetch" | "enrich" | "connect" | "briefing" | "global-news" | "research-briefing";
+type Step = "fetch" | "enrich" | "connect" | "briefing" | "global-news" | "research-briefing" | "crowdstrike-briefing";
 
 const STEPS: { key: Step; label: string; desc: string }[] = [
   { key: "fetch", label: "Fetch Articles", desc: "Pull latest from all sources" },
@@ -14,6 +14,7 @@ const STEPS: { key: Step; label: string; desc: string }[] = [
   { key: "briefing", label: "Generate Briefing", desc: "Daily intelligence summary" },
   { key: "global-news", label: "Global News Briefing", desc: "Global intelligence digest (Sonnet)" },
   { key: "research-briefing", label: "Research Briefing", desc: "Cross-domain R&D synthesis (Sonnet)" },
+  { key: "crowdstrike-briefing", label: "CrowdStrike Briefing", desc: "CrowdStrike company intelligence digest (Sonnet)" },
 ];
 
 type StepStatus = "idle" | "running" | "done" | "error" | "skipped";
@@ -27,6 +28,7 @@ export function PipelineRunner() {
     briefing: "idle",
     "global-news": "idle",
     "research-briefing": "idle",
+    "crowdstrike-briefing": "idle",
   });
   const [messages, setMessages] = useState<Record<Step, string>>({
     fetch: "",
@@ -35,13 +37,14 @@ export function PipelineRunner() {
     briefing: "",
     "global-news": "",
     "research-briefing": "",
+    "crowdstrike-briefing": "",
   });
   const [running, setRunning] = useState(false);
 
   async function runAll() {
     setRunning(true);
-    setStatuses({ fetch: "idle", enrich: "idle", connect: "idle", briefing: "idle", "global-news": "idle", "research-briefing": "idle" });
-    setMessages({ fetch: "", enrich: "", connect: "", briefing: "", "global-news": "", "research-briefing": "" });
+    setStatuses({ fetch: "idle", enrich: "idle", connect: "idle", briefing: "idle", "global-news": "idle", "research-briefing": "idle", "crowdstrike-briefing": "idle" });
+    setMessages({ fetch: "", enrich: "", connect: "", briefing: "", "global-news": "", "research-briefing": "", "crowdstrike-briefing": "" });
 
     for (const step of STEPS) {
       setStatuses((prev) => ({ ...prev, [step.key]: "running" }));

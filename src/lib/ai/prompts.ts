@@ -191,6 +191,47 @@ List all articles referenced as markdown links: "- [Article Title](URL) — Sour
 **IMPORTANT:** Every claim must have an inline source link. Be analytically opinionated — don't just summarize, synthesize across domains and highlight what matters. Focus on technical depth, not hype.`;
 }
 
+export function buildCrowdStrikeBriefingPrompt(articles: Array<{
+  title: string;
+  summary: string;
+  source: string;
+  url: string;
+  impactLevel?: string;
+  tags?: string[];
+}>): string {
+  const articleList = articles
+    .map((a, i) => `${i + 1}. ${a.impactLevel ? `[${a.impactLevel.toUpperCase()}] ` : ""}${a.title} (${a.source})\n   ${a.summary}${a.tags?.length ? `\n   Tags: ${a.tags.join(", ")}` : ""}\n   ${a.url}`)
+    .join("\n\n");
+
+  return `You are a senior equity analyst and cybersecurity strategist tracking CrowdStrike (CRWD). Synthesize the latest intelligence into a concise daily briefing for an executive who follows this company closely.
+
+**Date:** ${new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+
+**CrowdStrike Intelligence (${articles.length} articles):**
+
+${articleList}
+
+**Instructions:**
+Generate a focused CrowdStrike briefing in markdown. Use these exact sections:
+
+## What Happened
+- 3-5 bullets on the most material developments. Lead with the biggest deal. Each on its own line starting with "- ". Cite sources inline as markdown links.
+
+## Market & Competitive Signal
+Stock/earnings/analyst moves, competitive positioning vs. SentinelOne, Palo Alto, Microsoft. Skip if nothing notable. Cite sources inline.
+
+## Product & Threat Intel
+Product updates, new threat research from CrowdStrike or about threats relevant to their platform, technical developments. Skip if nothing notable. Cite sources inline.
+
+## So What
+- 2-3 bullets connecting the dots — what does this mean strategically for CrowdStrike's position, growth trajectory, or risk profile? Each on its own line starting with "- ".
+
+## Sources
+List all articles referenced as markdown links: "- [Article Title](URL) — Source Name"
+
+**IMPORTANT:** Every claim must have an inline source link. Keep it tight — under 1 page. Every sentence should earn its place.`;
+}
+
 export function buildConnectionPrompt(articles: Array<{
   id: string;
   title: string;
