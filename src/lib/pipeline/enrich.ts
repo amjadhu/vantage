@@ -54,7 +54,7 @@ export async function runEnrichmentPipeline(opts: {
       });
 
       const response = await callClaude({
-        model: "claude-haiku-3-5-20241022",
+        model: "claude-haiku-4-5-20251001",
         prompt,
         maxTokens: 512,
         temperature: 0.2,
@@ -74,7 +74,7 @@ export async function runEnrichmentPipeline(opts: {
         categoryTags: enrichment.categoryTags,
         keyFacts: enrichment.keyFacts,
         connectionHints: [],
-        modelUsed: "claude-haiku-3-5-20241022",
+        modelUsed: "claude-haiku-4-5-20251001",
         tokenCount: response.inputTokens + response.outputTokens,
         enrichedAt: new Date().toISOString(),
       });
