@@ -43,7 +43,7 @@ export async function runResearchBriefingPipeline(): Promise<{
 
   // Round-robin by source for diversity (max 3 per source, target 30)
   const MAX_PER_SOURCE = 3;
-  const TARGET = 30;
+  const TARGET = 20;
   const sourceCount: Record<string, number> = {};
   const selected: typeof allCandidates = [];
 
@@ -69,7 +69,7 @@ export async function runResearchBriefingPipeline(): Promise<{
   const response = await callClaude({
     model: "claude-sonnet-4-5-20250929",
     prompt,
-    maxTokens: 4096,
+    maxTokens: 3072,
     temperature: 0.5,
   });
 

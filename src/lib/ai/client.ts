@@ -14,7 +14,7 @@ export function getAnthropicClient(): Anthropic {
 }
 
 export async function callClaude(opts: {
-  model: "claude-sonnet-4-5-20250929" | "claude-opus-4-6";
+  model: "claude-sonnet-4-5-20250929" | "claude-opus-4-6" | "claude-haiku-3-5-20241022";
   system?: string;
   prompt: string;
   maxTokens?: number;

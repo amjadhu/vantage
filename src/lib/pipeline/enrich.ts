@@ -4,7 +4,8 @@ import { buildEnrichmentPrompt } from "@/lib/ai/prompts";
 import { parseEnrichmentResponse } from "@/lib/ai/parse";
 import { getUnenrichedArticles, getDefaultPersona, insertEnrichment } from "@/lib/db/queries";
 import { db, schema } from "@/lib/db/client";
-import { eq } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
+import { withConcurrency } from "@/lib/utils/concurrency";
 
 export async function runEnrichmentPipeline(opts: {
   limit?: number;
@@ -23,20 +24,27 @@ export async function runEnrichmentPipeline(opts: {
 
   const articles = await getUnenrichedArticles(limit);
 
+  // Pre-fetch all source names in one query
+  const sourceIds = [...new Set(articles.map((a) => a.sourceId))];
+  const sourceMap = new Map<string, string>();
+  if (sourceIds.length > 0) {
+    const sources = await db
+      .select({ id: schema.sources.id, name: schema.sources.name })
+      .from(schema.sources)
+      .where(inArray(schema.sources.id, sourceIds));
+    for (const s of sources) {
+      sourceMap.set(s.id, s.name);
+    }
+  }
+
   let enriched = 0;
   let failed = 0;
   let totalTokens = 0;
   const errors: string[] = [];
 
-  for (const article of articles) {
+  await withConcurrency(articles, 4, async (article) => {
     try {
-      const sourceResult = await db
-        .select({ name: schema.sources.name })
-        .from(schema.sources)
-        .where(eq(schema.sources.id, article.sourceId))
-        .limit(1);
-
-      const sourceName = sourceResult[0]?.name || "Unknown";
+      const sourceName = sourceMap.get(article.sourceId) || "Unknown";
 
       const prompt = buildEnrichmentPrompt({
         title: article.title,
@@ -46,9 +54,9 @@ export async function runEnrichmentPipeline(opts: {
       });
 
       const response = await callClaude({
-        model: "claude-sonnet-4-5-20250929",
+        model: "claude-haiku-3-5-20241022",
         prompt,
-        maxTokens: 1024,
+        maxTokens: 512,
         temperature: 0.2,
       });
 
@@ -66,7 +74,7 @@ export async function runEnrichmentPipeline(opts: {
         categoryTags: enrichment.categoryTags,
         keyFacts: enrichment.keyFacts,
         connectionHints: [],
-        modelUsed: "claude-sonnet-4-5-20250929",
+        modelUsed: "claude-haiku-3-5-20241022",
         tokenCount: response.inputTokens + response.outputTokens,
         enrichedAt: new Date().toISOString(),
       });
@@ -82,8 +90,8 @@ export async function runEnrichmentPipeline(opts: {
     }
 
     // Rate limit pause
-    await new Promise((r) => setTimeout(r, 500));
-  }
+    await new Promise((r) => setTimeout(r, 100));
+  });
 
   return { enriched, failed, errors, totalTokens };
 }

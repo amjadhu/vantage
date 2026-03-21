@@ -1,6 +1,7 @@
 import { getEnabledSources, updateSourceLastFetched } from "@/lib/db/queries";
 import { getConnector } from "./sources";
 import { normalizeAndStore } from "./normalize";
+import { withConcurrency } from "@/lib/utils/concurrency";
 
 export async function runFetchPipeline(): Promise<{
   totalFetched: number;
@@ -14,11 +15,11 @@ export async function runFetchPipeline(): Promise<{
   let totalSkipped = 0;
   const errors: string[] = [];
 
-  for (const source of sources) {
+  await withConcurrency(sources, 10, async (source) => {
     const connector = getConnector(source.type);
     if (!connector) {
       errors.push(`No connector for source type: ${source.type}`);
-      continue;
+      return;
     }
 
     try {
@@ -46,7 +47,7 @@ export async function runFetchPipeline(): Promise<{
       console.error(`[Pipeline] ${msg}`);
       errors.push(msg);
     }
-  }
+  });
 
   return { totalFetched, totalInserted, totalSkipped, errors };
 }

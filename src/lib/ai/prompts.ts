@@ -6,33 +6,21 @@ export function buildEnrichmentPrompt(article: {
   source: string;
   publishedAt: string;
 }): string {
-  return `Analyze this article and return a JSON enrichment.
+  return `Analyze this article. Return JSON only.
 
 Title: ${article.title}
 Source: ${article.source}
 Published: ${article.publishedAt}
-Content: ${article.content.substring(0, 3000)}
+Content: ${article.content.substring(0, 2500)}
 
-Return JSON with these fields:
-- "executiveSummary": 1-2 sentence summary of what matters and why a tech/security leader should care
-- "relevanceScore": 0-1 composite score based on:
-    * Actionability (0.3 weight): Does this require action or awareness? Breaking vulns, new regulations, major launches score high.
-    * Timeliness (0.25 weight): How time-sensitive? Active exploits and breaking news score highest. Evergreen content scores lower.
-    * Impact breadth (0.25 weight): How many orgs/people affected? Industry-wide > niche.
-    * Strategic value (0.2 weight): Long-term importance for tech strategy, security posture, or competitive landscape.
-  Score conservatively: reserve 0.9+ for truly critical/breaking items. Most solid news = 0.5-0.7. Routine updates = 0.2-0.4.
-- "impactLevel": "critical"|"high"|"medium"|"low"|"informational"
-    * critical: Active exploitation, major breach, urgent patch needed
-    * high: Significant vulnerability, major product launch, important policy change
-    * medium: Notable development, meaningful update
-    * low: Incremental update, routine announcement
-    * informational: Background/context, opinion, general interest
-- "sentiment": "positive"|"negative"|"neutral"|"mixed"
-- "entities": [{"name":"...","type":"company"|"person"|"technology"|"vulnerability"|"regulation"|"product"}] (max 5)
-- "categoryTags": short tags, max 4 (e.g. "ransomware","AI","cloud","zero-day")
-- "keyFacts": 2-3 key facts — specific and concrete (numbers, names, dates), not vague summaries
+Return this exact JSON shape:
+{"executiveSummary":"1-2 sentences on what matters for tech/security leaders","relevanceScore":0.5,"impactLevel":"medium","sentiment":"neutral","entities":[{"name":"...","type":"company|person|technology|vulnerability|regulation|product"}],"categoryTags":["tag1","tag2"],"keyFacts":["fact1","fact2"]}
 
-Return ONLY valid JSON. No markdown, no explanation.`;
+Scoring guide:
+- relevanceScore 0-1: 0.9+ critical/breaking only. 0.5-0.7 solid news. 0.2-0.4 routine.
+- impactLevel: critical (active exploit/breach) | high (major vuln/launch/policy) | medium (notable) | low (routine) | informational (background)
+- sentiment: positive | negative | neutral | mixed
+- entities: max 5. categoryTags: max 4. keyFacts: 2-3, specific (numbers/names/dates).`;
 }
 
 export function buildBriefingPrompt(articles: Array<{

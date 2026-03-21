@@ -40,7 +40,7 @@ export async function runConnectionPipeline(): Promise<{
   const response = await callClaude({
     model: "claude-sonnet-4-5-20250929",
     prompt,
-    maxTokens: 2048,
+    maxTokens: 1024,
     temperature: 0.2,
   });
 

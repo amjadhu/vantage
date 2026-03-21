@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import { v4 as uuid } from "uuid";
 import type { RawArticle } from "@/types";
 import { db, schema } from "@/lib/db/client";
-import { articleExistsByHash } from "@/lib/db/queries";
+import { inArray } from "drizzle-orm";
 
 function stripHtml(html: string): string {
   return html
@@ -28,39 +28,61 @@ function truncateContent(content: string, maxLength = 10000): string {
 }
 
 export async function normalizeAndStore(rawArticles: RawArticle[]): Promise<{ inserted: number; skipped: number }> {
-  let inserted = 0;
-  let skipped = 0;
+  if (rawArticles.length === 0) return { inserted: 0, skipped: 0 };
 
-  for (const raw of rawArticles) {
-    const contentHash = generateContentHash(raw);
+  // Compute hashes for all articles
+  const articleHashes = rawArticles.map((raw) => ({
+    raw,
+    contentHash: generateContentHash(raw),
+  }));
 
-    const exists = await articleExistsByHash(contentHash);
-    if (exists) {
-      skipped++;
-      continue;
+  // Batch check which hashes already exist
+  const allHashes = articleHashes.map((a) => a.contentHash);
+  const existingHashes = new Set<string>();
+
+  // Query in chunks of 100 to avoid SQLite variable limits
+  for (let i = 0; i < allHashes.length; i += 100) {
+    const chunk = allHashes.slice(i, i + 100);
+    const existing = await db
+      .select({ contentHash: schema.articles.contentHash })
+      .from(schema.articles)
+      .where(inArray(schema.articles.contentHash, chunk));
+    for (const row of existing) {
+      existingHashes.add(row.contentHash);
     }
-
-    const cleanContent = stripHtml(raw.content);
-    const cleanSummary = raw.summary ? stripHtml(raw.summary) : undefined;
-
-    await db.insert(schema.articles).values({
-      id: uuid(),
-      sourceId: raw.sourceId,
-      externalId: raw.externalId,
-      title: raw.title.trim(),
-      url: raw.url,
-      content: truncateContent(cleanContent),
-      summary: cleanSummary ? truncateContent(cleanSummary, 2000) : null,
-      author: raw.author || null,
-      publishedAt: raw.publishedAt.toISOString(),
-      categories: raw.categories || [],
-      metadata: raw.metadata || null,
-      contentHash,
-      fetchedAt: new Date().toISOString(),
-    });
-
-    inserted++;
   }
 
-  return { inserted, skipped };
+  // Prepare new articles
+  const newArticles = articleHashes
+    .filter((a) => !existingHashes.has(a.contentHash))
+    .map(({ raw, contentHash }) => {
+      const cleanContent = stripHtml(raw.content);
+      const cleanSummary = raw.summary ? stripHtml(raw.summary) : undefined;
+      return {
+        id: uuid(),
+        sourceId: raw.sourceId,
+        externalId: raw.externalId,
+        title: raw.title.trim(),
+        url: raw.url,
+        content: truncateContent(cleanContent),
+        summary: cleanSummary ? truncateContent(cleanSummary, 2000) : null,
+        author: raw.author || null,
+        publishedAt: raw.publishedAt.toISOString(),
+        categories: raw.categories || [],
+        metadata: raw.metadata || null,
+        contentHash,
+        fetchedAt: new Date().toISOString(),
+      };
+    });
+
+  // Batch insert in groups of 50
+  for (let i = 0; i < newArticles.length; i += 50) {
+    const batch = newArticles.slice(i, i + 50);
+    await db.insert(schema.articles).values(batch);
+  }
+
+  return {
+    inserted: newArticles.length,
+    skipped: rawArticles.length - newArticles.length,
+  };
 }

@@ -85,9 +85,9 @@ export async function runBriefingPipeline(): Promise<{
   const prompt = buildBriefingPrompt(articleData);
 
   const response = await callClaude({
-    model: "claude-opus-4-6",
+    model: "claude-sonnet-4-5-20250929",
     prompt,
-    maxTokens: 8192,
+    maxTokens: 4096,
     temperature: 0.4,
   });
 
@@ -99,7 +99,7 @@ export async function runBriefingPipeline(): Promise<{
     personaId: persona.id,
     markdownContent: response.content,
     articleIds,
-    modelUsed: "claude-opus-4-6",
+    modelUsed: "claude-sonnet-4-5-20250929",
     tokenCount: response.inputTokens + response.outputTokens,
     generatedAt: new Date().toISOString(),
   });

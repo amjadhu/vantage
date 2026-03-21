@@ -43,10 +43,7 @@ export async function seedSources() {
     { id: uuid(), name: "DeepMind Blog", type: "rss", url: "https://deepmind.google/blog/rss.xml", category: "research", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "The Gradient", type: "rss", url: "https://thegradient.pub/rss/", category: "research", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "Microsoft Research", type: "rss", url: "https://www.microsoft.com/en-us/research/feed/", category: "research", fetchIntervalMinutes: 360 },
-    { id: uuid(), name: "Apple Machine Learning", type: "rss", url: "https://machinelearning.apple.com/rss.xml", category: "research", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "BAIR Blog", type: "rss", url: "https://bair.berkeley.edu/blog/feed.xml", category: "research", fetchIntervalMinutes: 360 },
-    { id: uuid(), name: "NVIDIA Deep Learning", type: "rss", url: "https://blogs.nvidia.com/blog/category/deep-learning/feed/", category: "research", fetchIntervalMinutes: 360 },
-    { id: uuid(), name: "PyTorch Blog", type: "rss", url: "https://pytorch.org/blog/feed.xml", category: "research", fetchIntervalMinutes: 360 },
     // ── Research: Semiconductors ─────────────────────────────────
     { id: uuid(), name: "IEEE Spectrum", type: "rss", url: "https://spectrum.ieee.org/feeds/feed.rss", category: "research", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "Semiconductor Engineering", type: "rss", url: "https://semiengineering.com/feed/", category: "research", fetchIntervalMinutes: 360 },
@@ -67,6 +64,9 @@ export async function seedSources() {
     // ── Research: Systems/Networking ─────────────────────────────
     { id: uuid(), name: "arXiv CS.NI", type: "rss", url: "https://rss.arxiv.org/rss/cs.NI", category: "research", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "arXiv CS.DC", type: "rss", url: "https://rss.arxiv.org/rss/cs.DC", category: "research", fetchIntervalMinutes: 360 },
+    // ── Research: Curated Digests ────────────────────────────────
+    { id: uuid(), name: "Quanta Magazine", type: "rss", url: "https://www.quantamagazine.org/feed/", category: "research", fetchIntervalMinutes: 360 },
+    { id: uuid(), name: "ACM TechNews", type: "rss", url: "https://technews.acm.org/rss.xml", category: "research", fetchIntervalMinutes: 360 },
     // ── Research: General Science ────────────────────────────────
     { id: uuid(), name: "Nature News", type: "rss", url: "https://www.nature.com/nature.rss", category: "research", fetchIntervalMinutes: 360 },
     { id: uuid(), name: "Science Daily", type: "rss", url: "https://www.sciencedaily.com/rss/all.xml", category: "research", fetchIntervalMinutes: 360 },
@@ -103,7 +103,6 @@ export async function seedSources() {
     // ── Global News ──────────────────────────────────────────────
     { id: uuid(), name: "Reuters", type: "rss", url: "https://www.reutersagency.com/feed/", category: "global", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "AP News", type: "rss", url: "https://rsshub.app/apnews/topics/apf-topnews", category: "global", fetchIntervalMinutes: 240 },
-    { id: uuid(), name: "AFP", type: "rss", url: "https://www.france24.com/en/rss", category: "global", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "BBC World", type: "rss", url: "https://feeds.bbci.co.uk/news/world/rss.xml", category: "global", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "The Guardian World", type: "rss", url: "https://www.theguardian.com/world/rss", category: "global", fetchIntervalMinutes: 240 },
     { id: uuid(), name: "DW News", type: "rss", url: "https://rss.dw.com/rdf/rss-en-all", category: "global", fetchIntervalMinutes: 240 },
@@ -130,6 +129,15 @@ export async function seedSources() {
   );
 
   console.log(`Seeded ${newSources.length} new sources (${existingSources.length} already existed)`);
+
+  // Disable removed sources
+  const removedSources = ["AFP", "Apple Machine Learning", "NVIDIA Deep Learning", "PyTorch Blog"];
+  for (const name of removedSources) {
+    if (existingNames.has(name)) {
+      await db.update(schema.sources).set({ enabled: false }).where(eq(schema.sources.name, name));
+      console.log(`Disabled removed source: "${name}"`);
+    }
+  }
 
   // Recategorize sources that changed category
   const recategorizations = [
